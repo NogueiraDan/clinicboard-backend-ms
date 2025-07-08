@@ -50,9 +50,10 @@ jobs:
       - name: Install dependencies and run tests
         run: |
           cd bff
-          npm install
+          npm ci
           npm run lint
           npm run test
+          npm run build
           
   user-service:
     needs: filter
