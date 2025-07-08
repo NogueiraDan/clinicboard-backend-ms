@@ -1,41 +1,41 @@
 version: "3"
 services:
-  # service-discovery:
-  #   build:
-  #     context: ./service-discovery
-  #   image: service-discovery
-  #   container_name: service-discovery
-  #   restart: on-failure
-  #   ports:
-  #     - "8761:8761"
-  #   networks:
-  #     - clinicboard
+  service-discovery:
+    build:
+      context: ./service-discovery
+    image: service-discovery
+    container_name: service-discovery
+    restart: on-failure
+    ports:
+      - "8761:8761"
+    networks:
+      - clinicboard
 
-  # gateway-service:
-  #   build:
-  #     context: ./gateway
-  #   image: gateway-service
-  #   container_name: gateway-service
-  #   restart: on-failure
-  #   environment:
-  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - service-discovery
+  gateway-service:
+    build:
+      context: ./gateway
+    image: gateway-service
+    container_name: gateway-service
+    restart: on-failure
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    ports:
+      - "8080:8080"
+    networks:
+      - clinicboard
+    depends_on:
+      - service-discovery
 
-  # redis:
-  #   image: redis
-  #   container_name: clinicboard-redis
-  #   restart: on-failure
-  #   ports:
-  #     - 6379:6379
-  #   volumes:
-  #     - redis_data:/data
-  #   networks:
-  #     - clinicboard
+  redis:
+    image: redis
+    container_name: clinicboard-redis
+    restart: on-failure
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - clinicboard
 
   rabbitmq:
     image: "rabbitmq:3.8.6-management"
@@ -52,143 +52,122 @@ services:
     networks:
       - clinicboard
 
-  # user-service:
-  #   build:
-  #     context: ./user-service
-  #   image: user-service
-  #   container_name: user-service
-  #   restart: on-failure
-  #   environment:
-  #     - JWT_SECRET=clinicboard-ms-secret
-  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
-  #     - DATABASE_URL=jdbc:postgresql://${PGHOST}/${PGDATABASE}?user=${PGUSER}&password=${PGPASSWORD}&sslmode=require
-  #     - DATABASE_USER=${PGUSER}
-  #     - DATABASE_PASSWORD=${PGPASSWORD}
-  #   ports:
-  #     - "8081:8081"
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - service-discovery
-  #     - gateway-service
+  user-service:
+    build:
+      context: ./user-service
+    image: user-service
+    container_name: user-service
+    restart: on-failure
+    environment:
+      - JWT_SECRET=clinicboard-ms-secret
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+      - DATABASE_URL=jdbc:postgresql://${PGHOST}/${PGDATABASE}?user=${PGUSER}&password=${PGPASSWORD}&sslmode=require
+      - DATABASE_USER=${PGUSER}
+      - DATABASE_PASSWORD=${PGPASSWORD}
+    ports:
+      - "8081:8081"
+    networks:
+      - clinicboard
+    depends_on:
+      - service-discovery
+      - gateway-service
 
-  # business-service:
-  #   build:
-  #     context: ./business-service
-  #   image: business-service
-  #   container_name: business-service
-  #   restart: on-failure
-  #   environment:
-  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
-  #     - DATABASE_URL=jdbc:postgresql://${PGHOST}/${PGDATABASE}?user=${PGUSER}&password=${PGPASSWORD}&sslmode=require
-  #     - DATABASE_USER=${PGUSER}
-  #     - DATABASE_PASSWORD=${PGPASSWORD}
-  #     - RABBITMQ_HOST=rabbitmq
-  #   ports:
-  #     - "8082:8082"
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - service-discovery
-  #     - rabbitmq
-  #     - gateway-service
+  business-service:
+    build:
+      context: ./business-service
+    image: business-service
+    container_name: business-service
+    restart: on-failure
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+      - DATABASE_URL=jdbc:postgresql://${PGHOST}/${PGDATABASE}?user=${PGUSER}&password=${PGPASSWORD}&sslmode=require
+      - DATABASE_USER=${PGUSER}
+      - DATABASE_PASSWORD=${PGPASSWORD}
+      - RABBITMQ_HOST=rabbitmq
+    ports:
+      - "8082:8082"
+    networks:
+      - clinicboard
+    depends_on:
+      - service-discovery
+      - rabbitmq
+      - gateway-service
 
-  # notification-service:
-  #   build:
-  #     context: ./notification-service
-  #   image: notification-service
-  #   container_name: notification-service
-  #   restart: on-failure
-  #   environment:
-  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
-  #     - RABBITMQ_ADDRESS=${RABBITMQ_ADDRESS}
-  #     - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
-  #     - RABBITMQ_HOST=rabbitmq
-  #   ports:
-  #     - "8083:8083"
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - service-discovery
-  #     - rabbitmq
-  #     - gateway-service
+  notification-service:
+    build:
+      context: ./notification-service
+    image: notification-service
+    container_name: notification-service
+    restart: on-failure
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+      - RABBITMQ_ADDRESS=${RABBITMQ_ADDRESS}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+      - RABBITMQ_HOST=rabbitmq
+    ports:
+      - "8083:8083"
+    networks:
+      - clinicboard
+    depends_on:
+      - service-discovery
+      - rabbitmq
+      - gateway-service
 
-  # bff:
-  #   build:
-  #     context: ./bff
-  #   image: bff
-  #   container_name: bff
-  #   restart: on-failure
-  #   environment:
-  #     - NODE_ENV=production
-  #     - GATEWAY_URL=http://gateway-service:8080
-  #   ports:
-  #     - 3002:3002
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - service-discovery
-  #     - gateway-service
-  #     - user-service
-  #     - business-service
-  #     - notification-service
-  #     - redis
+  bff:
+    build:
+      context: ./bff
+    image: bff
+    container_name: bff
+    restart: on-failure
+    environment:
+      - NODE_ENV=production
+      - GATEWAY_URL=http://gateway-service:8080
+    ports:
+      - 3002:3002
+    networks:
+      - clinicboard
+    depends_on:
+      - service-discovery
+      - gateway-service
+      - user-service
+      - business-service
+      - notification-service
+      - redis
 
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   container_name: prometheus
-  #   volumes:
-  #     - prometheus_data:/etc/prometheus
-  #     - ./.monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  #   ports:
-  #     - 9090:9090
-  #   networks:
-  #     - clinicboard
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - prometheus_data:/etc/prometheus
+      - ./_monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    networks:
+      - clinicboard
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   container_name: grafana
-  #   ports:
-  #     - 3001:3000
-  #   restart: unless-stopped
-  #   volumes:
-  #     - grafana_data:/etc/grafana
-  #     - ./.monitoring/grafana/datasources.yml:/etc/grafana/datasources.yml
-  #   environment:
-  #     - GF_SECURITY_ADMIN_USER=admin
-  #     - GF_SECURITY_ADMIN_PASSWORD=admin  # Usuário/senha padrão
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - prometheus
-
-  # patients-service:
-  #   build:
-  #     context: ./patients-service
-  #   image: patients-service
-  #   container_name: patients-service
-  #   environment:
-  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
-  #     - DATABASE_URL=jdbc:postgresql://${PGHOST}/${PGDATABASE}?user=${PGUSER}&password=${PGPASSWORD}&sslmode=require
-  #     - DATABASE_USER=${PGUSER}
-  #     - DATABASE_PASSWORD=${PGPASSWORD}
-  #     - RABBITMQ_ADDRESS=${RABBITMQ_ADDRESS}
-  #     - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
-  #     - RABBITMQ_HOST=rabbitmq
-  #   ports:
-  #     - "8082:8082"
-  #   networks:
-  #     - clinicboard
-  #   depends_on:
-  #     - service-discovery
-  #     - rabbitmq
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/etc/grafana
+      - ./_monitoring/grafana/datasources.yml:/etc/grafana/datasources.yml
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Usuário/senha padrão
+    networks:
+      - clinicboard
+    depends_on:
+      - prometheus
 
 networks:
   clinicboard:
     driver: bridge
 
 volumes:
-  # prometheus_data:
-  # grafana_data:
-  # redis_data:
+  prometheus_data:
+  grafana_data:
+  redis_data:
   rabbitmq_data:
