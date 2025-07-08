@@ -86,7 +86,7 @@ jobs:
 
       - name: Build and test with Maven
         run: |
-          cd users-service
+          cd user-service
           mvn clean install
           mvn test
 
