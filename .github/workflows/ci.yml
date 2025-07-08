@@ -9,70 +9,55 @@ on:
       - main
 
 jobs:
-  # filter:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      bff: ${{ steps.filter.outputs.bff }}
+      user-service: ${{ steps.filter.outputs.user-service }}
+      business-service: ${{ steps.filter.outputs.business-service }}
+      notification-service: ${{ steps.filter.outputs.notification-service }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  #     - name: Paths filter
-  #       id: filter
-  #       uses: dorny/paths-filter@v2
-  #       with:
-  #         filters: |
-  #           client-bff:
-  #             - 'client-bff/**'
-  #           api-gateway:
-  #             - 'api-gateway/**'
-  #           users-service:
-  #             - 'users-service/**'
-  #           patients-service:
-  #             - 'patients-service/**'
-  #           notification-service:
-  #             - 'notification-service/**'
-  # client-bff:
-  #   needs: filter
-  #   if: ${{ needs.filter.outputs['client-bff'] == 'true' }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18
-
-  #     - name: Install dependencies and run tests
-  #       run: |
-  #         cd client-bff
-  #         npm install
-  #         npm run lint
-  #         npm run test
-
-  gateway:
-    # needs: filter
-    # if: ${{ needs.filter.outputs['api-gateway'] == 'true' }}
+      - name: Paths filter
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            bff:
+              - 'bff/**'
+            user-service:
+              - 'user-service/**'
+            business-service:
+              - 'business-service/**'
+            notification-service:
+              - 'notification-service/**'
+  bff:
+    needs: filter
+    # if: ${{ needs.filter.outputs['bff'] == 'true' }}
+    if: ${{ needs.filter.outputs.bff == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          java-version: 17
-          distribution: 'temurin'
+          node-version: 18
 
-      - name: Build and test with Maven
+      - name: Install dependencies and run tests
         run: |
-          cd gateway
-          mvn clean install
-          mvn test
-
-  users-service:
-    # needs: filter
-    # if: ${{ needs.filter.outputs['users-service'] == 'true' }}
+          cd bff
+          npm install
+          npm run lint
+          npm run test
+          
+  user-service:
+    needs: filter
+    # if: ${{ needs.filter.outputs['user-service'] == 'true' }}
+    if: ${{ needs.filter.outputs.user-service == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -91,8 +76,9 @@ jobs:
           mvn test
 
   business-service:
-    # needs: filter
+    needs: filter
     # if: ${{ needs.filter.outputs['business-service'] == 'true' }}
+    if: ${{ needs.filter.outputs.business-service == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -111,8 +97,9 @@ jobs:
           mvn test
 
   notification-service:
-    # needs: filter
+    needs: filter
     # if: ${{ needs.filter.outputs['notification-service'] == 'true' }}
+    if: ${{ needs.filter.outputs.notification-service == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
