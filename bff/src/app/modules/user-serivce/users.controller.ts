@@ -1,12 +1,10 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
   Delete,
-  Query,
   NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -29,12 +27,12 @@ export class UsersController {
   @Get('/user/:email')
   findByEmail(@Param('email') email: string): any {
     const user = this.usersService.findByEmail(email);
-    if(!user) {
+    if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
   }
-  
+
   @Patch(':id')
   update(
     @Param('id') id: string,
