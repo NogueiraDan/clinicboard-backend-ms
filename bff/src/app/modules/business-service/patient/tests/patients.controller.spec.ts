@@ -1,17 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PatientsController } from '../patient.controller';
-import { PatientsService } from '../patient.service';
+import { PatientController } from '../patient.controller';
+import { PatientService } from '../patient.service';
+import { HttpRequestService } from 'src/app/commons/modules/http/http-request.service';
+import { AppConfigService } from 'src/app/config/config.service';
 
-describe('PatientsController', () => {
-  let controller: PatientsController;
+describe('PatientController', () => {
+  let controller: PatientController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [PatientsController],
-      providers: [PatientsService],
+      controllers: [PatientController],
+      providers: [
+        PatientService,
+        {
+          provide: HttpRequestService,
+          useValue: {
+            get: jest.fn(),
+            post: jest.fn(),
+            put: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+        {
+          provide: AppConfigService,
+          useValue: {
+            get: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    controller = module.get<PatientsController>(PatientsController);
+    controller = module.get<PatientController>(PatientController);
   });
 
   it('should be defined', () => {
