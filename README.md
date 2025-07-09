@@ -49,3 +49,7 @@ A arquitetura deste projeto segue o padrão de microsserviços, onde cada servi�
 
 O entrypoint inicial do projeto é o BFF, porém os demais serviços precisam estar ativos para haver a comunicação. O projeto está configurado tanto para uso local (rodando os apps Spring separadamente), quanto para uso containerizado no Docker (rodando o docker-compose.yaml)
    - **Detalhe:** É preciso ter posse de arquivo de configuração (.env), para conexão com a base de dados.
+
+## ✒️ Autor
+
+* **Daniel Nogueira** - *Web Developer* - [Github](https://github.com/NogueiraDan)
