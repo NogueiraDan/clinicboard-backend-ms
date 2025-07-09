@@ -2,7 +2,7 @@
 
 ## Descrição
 
-Este projeto implementa uma nova solução para as funcionalidades do sistema Psiboard baseada em microsserviços utilizando Java e Spring Boot dividido em microsserviços. A arquitetura promove uma separação clara de responsabilidades entre os diferentes serviços e suas funcionalidades específicas. O projeto também utiliza um API Gateway para gerenciamento de requisições e um serviço de descoberta (Service Discovery) para garantir que os microsserviços se encontrem e se comuniquem de forma eficiente. Também foi pensado e implementado um client BFF em NestJS para atuar como fonte de acesso aos serviços, fornecendo uma ponte otimizada para a interação com os microsserviços.
+Este projeto implementa uma nova solução para as funcionalidades do sistema Clinicboard baseada em microsserviços utilizando Java e Spring Boot dividido em microsserviços. A arquitetura promove uma separação clara de responsabilidades entre os diferentes serviços e suas funcionalidades específicas. O projeto também utiliza um API Gateway para gerenciamento de requisições e um serviço de descoberta (Service Discovery) para garantir que os microsserviços se encontrem e se comuniquem de forma eficiente. Também foi pensado e implementado um client BFF em NestJS para atuar como fonte de acesso aos serviços, fornecendo uma ponte otimizada para a interação com os microsserviços.
 
 ## Tecnologias Utilizadas
 
