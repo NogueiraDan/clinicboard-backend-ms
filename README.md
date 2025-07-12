@@ -1,55 +1,98 @@
-# Sistema de Microsserviços com Java/Spring Boot e NestJS
 
-## Descrição
+# 💻​ Sistema de Agendamento com Microsserviços (Spring Boot + RabbitMQ + NestJS)
 
-Este projeto implementa uma nova solução para as funcionalidades do sistema Clinicboard baseada em microsserviços utilizando Java e Spring Boot dividido em microsserviços. A arquitetura promove uma separação clara de responsabilidades entre os diferentes serviços e suas funcionalidades específicas. O projeto também utiliza um API Gateway para gerenciamento de requisições e um serviço de descoberta (Service Discovery) para garantir que os microsserviços se encontrem e se comuniquem de forma eficiente. Também foi pensado e implementado um client BFF em NestJS para atuar como fonte de acesso aos serviços, fornecendo uma ponte otimizada para a interação com os microsserviços.
+---
 
-## Tecnologias Utilizadas
+## 📌 Visão Geral
 
-### Backend
+Este projeto implementa uma solução de um sistema baseada em microsserviços utilizando Java/Spring Boot dividido em microsserviços, API Gateway para gerenciamento de requisições e um serviço de descoberta (Service Discovery) para garantir que os microsserviços se encontrem. Também foi pensado e implementado um client BFF em NestJS para atuar como fonte de acesso aos serviços, fornecendo uma ponte para a interação com os microsserviços, além de mensageria com RabbitMQ.
 
-- **Java 17**: Linguagem principal para os microsserviços.
-- **Spring Boot 3.x**: Framework para facilitar o desenvolvimento de aplicações robustas e escaláveis.
-- **Spring Cloud**: Utilizado para implementar padrões de microsserviços como:
-  - **API Gateway**: Para rotear e controlar o tráfego entre clientes e microsserviços.
-  - **Service Discovery (Eureka/Consul)**: Para permitir que os serviços registrem e descubram uns aos outros dinamicamente.
-- **NestJS**: Framework Node.js para construção do Client BFF.
-  - O BFF atua como um intermediário entre os microsserviços e o cliente final, agregando e formatando dados conforme necessário.
-- **Docker**: Para poder startar os serviços em containers orquestrados.
-- **Redis**: Serviço de cache para armazenamento do token de acesso usado para liberar requisições à rotas
+---
 
-## Estrutura do Projeto
+## 🔧 Arquitetura
 
-A arquitetura deste projeto segue o padrão de microsserviços, onde cada serviço é independente e responsável por uma funcionalidade específica dentro do sistema. Os principais componentes incluem:
+![Diagrama da Arquitetura](./architecture.png)
 
-1. **API Gateway**:
+```mermaid
+flowchart TD
+    Client(BFF - NestJS) --> Gateway(API Gateway)
+    Gateway -->|Valida Token| RedisCache[Redis Cache]
+    Gateway -->|Roteia Requisição| ServiceDiscovery[Eureka]
+    ServiceDiscovery --> UserService[User Service]
+    ServiceDiscovery --> BusinessService[Business Service]
+    ServiceDiscovery --> NotificationService[Notification Service]
 
-   - Gerencia o roteamento das requisições entre o cliente e os microsserviços.
-   - Centraliza a autenticação e autorização.
-   - Aplica políticas de segurança e controle de tráfego.
+    BusinessService -->|Cria Agendamento| RabbitMQProducer[Publica Evento]
+    RabbitMQProducer --> Queue[Queue - Scheduling]
+    Queue --> NotificationService
 
-2. **Service Discovery**:
+    NotificationService -->|Envia Notificação| DeadLetterQueue[DLQ - Retry]
 
-   - Facilita a comunicação entre microsserviços, permitindo que eles se registrem dinamicamente e descubram uns aos outros.
-   - Garante escalabilidade e alta disponibilidade.
+    UserService --> PostgreSQL[(PostgreSQL)]
+    BusinessService --> PostgreSQL
+```
 
-3. **Microsserviços**:
+---
 
-   - Cada microsserviço é autônomo, responsável por uma parte específica do domínio.
-   - Implementados com Spring Boot, cada serviço possui sua própria responsabilidade e lógica de negócio.
+## 🔐 Autenticação
 
-4. **Client BFF (Backend for Frontend)**:
-   - Implementado com NestJS, o BFF faz a agregação de dados para o frontend.
-   - Reduz a complexidade e latência no frontend, oferecendo respostas otimizadas e personalizadas para o cliente.
+- Autenticação baseada em **JWT**
+- Tokens válidos são armazenados em cache via **Redis** para evitar revalidações desnecessárias
+- O Gateway intercepta e valida todas as requisições
 
-## Arquitetura do projeto
-![Logo do Projeto](./architecture.png)
+---
 
-## Configurações do Projeto
+## 🔁 Comunicação entre Serviços
 
-O entrypoint inicial do projeto é o BFF, porém os demais serviços precisam estar ativos para haver a comunicação. O projeto está configurado tanto para uso local (rodando os apps Spring separadamente), quanto para uso containerizado no Docker (rodando o docker-compose.yaml)
-   - **Detalhe:** É preciso ter posse de arquivo de configuração (.env), para conexão com a base de dados.
+- **Síncrona:** via `Feign Client` com `Circuit Breaker` e `Fallback` para resiliência
+- **Assíncrona:** via **RabbitMQ**, com mensagens de eventos sendo publicadas ao criar agendamentos
+
+---
+
+## 📩 Mensageria com RabbitMQ
+
+- O `Business Service` publica eventos de agendamento
+- O `Notification Service` consome os eventos e envia mensagens
+- Se falhar, a mensagem vai para a **Dead Letter Queue** e é reprocessada após um intervalo
+
+---
+
+## 🧰 Tecnologias Utilizadas
+
+| Camada             | Tecnologia                        |
+|--------------------|------------------------------------|
+| Backend            | Java 17, Spring Boot, Spring Cloud |
+| API Gateway        | Spring Cloud Gateway               |
+| Service Discovery  | Eureka                             |
+| Mensageria         | RabbitMQ                           |
+| Cache              | Redis                              |
+| Banco de Dados     | PostgreSQL                         |
+| Resiliência        | Resilience4j (Circuit Breaker)     |
+| Autenticação       | JWT                       |
+| BFF     | NestJS (Node.js)                   |
+
+---
+
+## 🧠 Decisões Arquiteturais
+
+- **Banco único (PostgreSQL):** Para fins de simplicidade no projeto. Em produção, o ideal seria cada serviço possuir seu próprio banco.
+- **Mensageria com Dead Letter Queue:** Garante resiliência em cenários assíncronos
+- **Circuit Breakers em todas as comunicações síncronas:** Evita falhas em cascata e melhora disponibilidade
+
+---
+
+## ✅ Possíveis Evoluções
+
+- Adição de observabilidade (ex: Zipkin, Grafana, Prometheus)
+- Separação de banco por serviço
+- Implementação de testes de contrato entre microsserviços
+- Notificações via e-mail ou push real
+
+---
 
 ## ✒️ Autor
 
-* **Daniel Nogueira** - *Web Developer* - [Github](https://github.com/NogueiraDan)
+**Daniel Nogueira** - *Desenvolvedor* - [Perfil do Github](https://github.com/NogueiraDan)  
+💼 [Meu perfil do LinkedIn](https://www.linkedin.com/in/daniel-nogueira99/)
+
+---
