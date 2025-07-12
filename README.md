@@ -36,7 +36,7 @@ A arquitetura deste projeto segue o padrão de microsserviços, onde cada servi�
 3. **Microsserviços**:
 
    - Cada microsserviço é autônomo, responsável por uma parte específica do domínio.
-   - Implementados com Spring Boot, cada serviço possui sua própria responsabilidade e base de dados.
+   - Implementados com Spring Boot, cada serviço possui sua própria responsabilidade e lógica de negócio.
 
 4. **Client BFF (Backend for Frontend)**:
    - Implementado com NestJS, o BFF faz a agregação de dados para o frontend.
