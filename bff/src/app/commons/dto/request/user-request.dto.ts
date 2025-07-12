@@ -1,8 +1,13 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum } from 'class-validator'; 
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  IsEnum,
+} from 'class-validator';
 import { UserRole } from '../../enums/user-role.enum';
 
 export class UserRequestDto {
-  
   @IsNotEmpty({ message: 'Nome não pode ser vazio!' })
   @IsString({ message: 'Nome deve ser uma string!' })
   name: string;

@@ -46,7 +46,7 @@ export class AppointmentService {
     );
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return await this.httpRequestService.request(
       'GET',
       `${this.appConfigService.baseUrls.BUSINESS_SERVICE}/appointments/${id}`,

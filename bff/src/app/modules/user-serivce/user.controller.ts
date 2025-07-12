@@ -7,7 +7,7 @@ import {
   Delete,
   NotFoundException,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './user.service';
 import { UpdateUserDto } from '../../commons/dto/request/update-user.dto';
 import { UserResponseDto } from '../../commons/dto/response/user-response.dto';
 
@@ -38,7 +38,6 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    console.log('id enviado como paramentro', id);
     return this.usersService.update(id, updateUserDto);
   }
 

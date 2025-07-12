@@ -41,7 +41,7 @@ export class AppointmentController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.appointmentService.findOne(+id);
+    return this.appointmentService.findOne(id);
   }
 
   @Put(':id')

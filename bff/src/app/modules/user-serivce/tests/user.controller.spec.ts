@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersController } from '../users.controller';
-import { UsersService } from '../users.service';
+import { UsersController } from '../user.controller';
+import { UsersService } from '../user.service';
 import { HttpRequestService } from 'src/app/commons/modules/http/http-request.service';
 import { AppConfigService } from 'src/app/config/config.service';
 
