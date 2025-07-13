@@ -52,10 +52,10 @@ public class PatientService implements PatientServiceInterface {
         value = "%" + value + "%";
         switch (param.toLowerCase()) {
             case "nome":
-                patients = patientRepository.findByName(value);
+                patients = patientRepository.findByNameContainingIgnoreCase(value);
                 break;
             case "contato":
-                patients = patientRepository.findByContact(value);
+                patients = patientRepository.findByContactContainingIgnoreCase(value);
                 break;
             default:
                 throw new CustomGenericException("Parâmetro de busca inválido. Use 'nome' ou 'contato'.");

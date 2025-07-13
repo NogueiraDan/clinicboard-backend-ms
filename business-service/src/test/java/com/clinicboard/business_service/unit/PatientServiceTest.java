@@ -142,7 +142,7 @@ public class PatientServiceTest {
         String expectedValue = "%" + value + "%";
         List<Patient> patients = List.of(testPatient);
 
-        when(patientRepository.findByName(expectedValue)).thenReturn(patients);
+        when(patientRepository.findByNameContainingIgnoreCase(expectedValue)).thenReturn(patients);
         when(patientMapper.toDto(testPatient)).thenReturn(testPatientResponseDto);
 
         // Act
@@ -152,7 +152,7 @@ public class PatientServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(testPatientResponseDto, result.get(0));
-        verify(patientRepository).findByName(expectedValue);
+        verify(patientRepository).findByNameContainingIgnoreCase(expectedValue);
         verify(patientMapper).toDto(testPatient);
     }
 
@@ -165,7 +165,7 @@ public class PatientServiceTest {
         String expectedValue = "%" + value + "%";
         List<Patient> patients = List.of(testPatient);
 
-        when(patientRepository.findByContact(expectedValue)).thenReturn(patients);
+        when(patientRepository.findByContactContainingIgnoreCase(expectedValue)).thenReturn(patients);
         when(patientMapper.toDto(testPatient)).thenReturn(testPatientResponseDto);
 
         // Act
@@ -175,7 +175,7 @@ public class PatientServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(testPatientResponseDto, result.get(0));
-        verify(patientRepository).findByContact(expectedValue);
+        verify(patientRepository).findByContactContainingIgnoreCase(expectedValue);
         verify(patientMapper).toDto(testPatient);
     }
 
@@ -192,8 +192,8 @@ public class PatientServiceTest {
                 () -> patientService.findByFilter(param, value));
 
         assertEquals("Parâmetro de busca inválido. Use 'nome' ou 'contato'.", exception.getMessage());
-        verify(patientRepository, never()).findByName(any());
-        verify(patientRepository, never()).findByContact(any());
+        verify(patientRepository, never()).findByNameContainingIgnoreCase(any());
+        verify(patientRepository, never()).findByContactContainingIgnoreCase(any());
     }
 
     @Test
