@@ -94,7 +94,6 @@ public class PatientService implements PatientServiceInterface {
                 .toList();
     }
 
-    @SuppressWarnings("unlikely-arg-type")
     @Override
     @CircuitBreaker(name = "user-service", fallbackMethod = "saveFallback")
     public PatientResponseDto save(PatientRequestDto patientRequestDto) {
@@ -105,7 +104,7 @@ public class PatientService implements PatientServiceInterface {
         if (existingPatient.isPresent()) {
             throw new CustomGenericException("Email já cadastrado");
         }
-        if (!"PROFESSIONAL".equals(user.getRole())) {
+        if (!"PROFESSIONAL".equals(user.getRole().toString())) {
             throw new BusinessException("Perfil não permitido para essa operação");
         }
 
