@@ -1,0 +1,71 @@
+name: CD - ClinicBoard Microservices Auto Merge and Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI - ClinicBoard Microservices"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  auto-merge:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug - Show workflow info
+        run: |
+          echo "🔍 Workflow disparado por: ${{ github.event.workflow_run.event }}"
+          echo "🌿 Branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "✅ Status do CI: ${{ github.event.workflow_run.conclusion }}"
+
+
+      - name: Get PR number
+        id: pr
+        run: |
+          echo "🔍 Procurando PR para a branch: ${{ github.event.workflow_run.head_branch }}"
+          pr_number=$(gh pr list --head ${{ github.event.workflow_run.head_branch }} --json number --jq '.[0].number')
+          echo "📝 PR encontrado: #$pr_number"
+          echo "number=$pr_number" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-merge PR
+        if: steps.pr.outputs.number != 'null'
+        run: |
+          echo "🔀 Fazendo merge do PR #${{ steps.pr.outputs.number }}"
+          gh pr merge ${{ steps.pr.outputs.number }} --merge --admin
+          echo "✅ Merge realizado com sucesso!"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: auto-merge
+    if: always() && (needs.auto-merge.result == 'success' || github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying to production..."
+          # Aqui você pode adicionar seus comandos de deploy
+          # Exemplos:
+          # - Deploy para Docker Registry
+          # - Deploy para Kubernetes
+          # - Deploy para Cloud Provider (AWS, Azure, GCP)
+          
+      - name: Notify deployment success
+        run: |
+          echo "✅ Deployment completed successfully!"
