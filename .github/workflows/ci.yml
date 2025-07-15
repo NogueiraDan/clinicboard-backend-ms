@@ -20,6 +20,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debug - Show trigger info
+        run: |
+          echo "🔍 CI disparado por: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "👤 Autor: ${{ github.actor }}"
       - name: Paths filter
         id: filter
         uses: dorny/paths-filter@v2
