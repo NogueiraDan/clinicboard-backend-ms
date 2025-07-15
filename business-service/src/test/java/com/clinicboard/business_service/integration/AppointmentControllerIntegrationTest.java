@@ -72,7 +72,8 @@ public class AppointmentControllerIntegrationTest {
                 AppointmentRequestDto appointmentRequest = new AppointmentRequestDto();
                 appointmentRequest.setPatientId(testPatient.getId());
                 appointmentRequest.setProfessionalId("prof-123");
-                appointmentRequest.setDate(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
+                appointmentRequest.setDate(
+                                LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
                 appointmentRequest.setObservation("Consulta de rotina");
 
                 // When & Then
@@ -95,7 +96,8 @@ public class AppointmentControllerIntegrationTest {
                 Appointment appointment = new Appointment();
                 appointment.setPatientId(testPatient.getId());
                 appointment.setProfessionalId("prof-123");
-                appointment.setDate(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
+                appointment.setDate(
+                                LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
                 appointment.setObservation("Consulta teste");
                 appointmentRepository.save(appointment);
 
@@ -118,7 +120,8 @@ public class AppointmentControllerIntegrationTest {
                 Appointment appointment = new Appointment();
                 appointment.setPatientId(testPatient.getId());
                 appointment.setProfessionalId("prof-123");
-                appointment.setDate(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
+                appointment.setDate(
+                                LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
                 appointment.setObservation("Consulta específica");
                 appointment = appointmentRepository.save(appointment);
 
@@ -241,14 +244,16 @@ public class AppointmentControllerIntegrationTest {
                 Appointment appointment = new Appointment();
                 appointment.setPatientId(testPatient.getId());
                 appointment.setProfessionalId("prof-123");
-                appointment.setDate(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
+                appointment.setDate(
+                                LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0));
                 appointment.setObservation("Descrição original");
                 appointment = appointmentRepository.save(appointment);
 
                 AppointmentRequestDto updateRequest = new AppointmentRequestDto();
                 updateRequest.setPatientId(testPatient.getId());
                 updateRequest.setProfessionalId("prof-123");
-                appointment.setDate(LocalDateTime.now().plusDays(1).withHour(11).withMinute(0).withSecond(0).withNano(0));
+                appointment.setDate(
+                                LocalDateTime.now().plusDays(1).withHour(11).withMinute(0).withSecond(0).withNano(0));
                 updateRequest.setObservation("Descrição atualizada");
 
                 // When & Then
