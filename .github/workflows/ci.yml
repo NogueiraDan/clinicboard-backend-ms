@@ -25,6 +25,8 @@ jobs:
           echo "🔍 CI disparado por: ${{ github.event_name }}"
           echo "🌿 Branch: ${{ github.ref_name }}"
           echo "👤 Autor: ${{ github.actor }}"
+          echo "📝 Commit SHA: ${{ github.sha }}"
+          echo "🎯 Ref: ${{ github.ref }}"
       - name: Paths filter
         id: filter
         uses: dorny/paths-filter@v2
@@ -38,6 +40,13 @@ jobs:
               - 'business-service/**'
             notification-service:
               - 'notification-service/**'
+      - name: Debug - Show filter results
+        run: |
+          echo "🔍 Filter results:"
+          echo "BFF: ${{ steps.filter.outputs.bff }}"
+          echo "User Service: ${{ steps.filter.outputs.user-service }}"
+          echo "Business Service: ${{ steps.filter.outputs.business-service }}"
+          echo "Notification Service: ${{ steps.filter.outputs.notification-service }}"
   bff:
     needs: filter
     # if: ${{ needs.filter.outputs['bff'] == 'true' }}

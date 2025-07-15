@@ -7,6 +7,7 @@ on:
       - completed
     branches:
       - main
+  workflow_dispatch:  # ← ADICIONE ESTA LINHA para trigger manual
 
 permissions:
   contents: read
@@ -19,16 +20,19 @@ jobs:
     steps:
       - name: Debug workflow_run event
         run: |
-          echo "🔍 Event: ${{ github.event.workflow_run.event }}"
-          echo "✅ Conclusion: ${{ github.event.workflow_run.conclusion }}"
-          echo "🌿 Head Branch: ${{ github.event.workflow_run.head_branch }}"
-          echo "📝 Workflow ID: ${{ github.event.workflow_run.id }}"
-          echo "📋 Workflow URL: ${{ github.event.workflow_run.html_url }}"
+          echo "🔍 Event: ${{ github.event.workflow_run.event || 'manual' }}"
+          echo "✅ Conclusion: ${{ github.event.workflow_run.conclusion || 'N/A' }}"
+          echo "🌿 Head Branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}"
+          echo "📝 Workflow ID: ${{ github.event.workflow_run.id || 'manual' }}"
+          echo "📋 Workflow URL: ${{ github.event.workflow_run.html_url || 'manual' }}"
+          echo "🎯 Event Name: ${{ github.event_name }}"
+
   auto-merge:
     if: |
-      github.event.workflow_run.event == 'pull_request' && 
-      (github.event.workflow_run.conclusion == 'success' || 
-       github.event.workflow_run.conclusion == 'neutral')
+      (github.event.workflow_run.event == 'pull_request' && 
+       (github.event.workflow_run.conclusion == 'success' || 
+        github.event.workflow_run.conclusion == 'neutral')) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -36,14 +40,15 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Debug - Show workflow info
+      - name: Debug auto-merge - Show workflow info
         run: |
-          echo "🔍 Workflow disparado por: ${{ github.event.workflow_run.event }}"
-          echo "🌿 Branch: ${{ github.event.workflow_run.head_branch }}"
-          echo "✅ Status do CI: ${{ github.event.workflow_run.conclusion }}"
+          echo "🔍 Workflow disparado por: ${{ github.event.workflow_run.event || 'manual' }}"
+          echo "🌿 Branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}"
+          echo "✅ Status do CI: ${{ github.event.workflow_run.conclusion || 'manual' }}"
+          echo "🎯 Event Name: ${{ github.event_name }}"
 
-
-      - name: Get PR number
+      - name: Get PR number (se aplicável)
+        if: github.event.workflow_run.event == 'pull_request'
         id: pr
         run: |
           echo "🔍 Procurando PR para a branch: ${{ github.event.workflow_run.head_branch }}"
@@ -53,8 +58,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Test auto-merge (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "🧪 Executando em modo de teste manual"
+          echo "✅ CD está funcionando!"
+
       - name: Auto-merge PR
-        if: steps.pr.outputs.number != 'null'
+        if: github.event.workflow_run.event == 'pull_request' && steps.pr.outputs.number != 'null'
         run: |
           echo "🔀 Fazendo merge do PR #${{ steps.pr.outputs.number }}"
           gh pr merge ${{ steps.pr.outputs.number }} --merge --admin

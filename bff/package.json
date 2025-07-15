@@ -1,7 +1,7 @@
 {
   "name": "bff",
   "version": "0.0.1",
-  "description": "BFF Nest (Backend for Frontend) service for the application",
+  "description": "BFF Nest service for the application",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
