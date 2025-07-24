@@ -1,5 +1,7 @@
 package com.clinicboard.user_service.application.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +28,7 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final UserServiceInterface userServiceInterface;
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationController.class);
 
     public AuthenticationController(AuthenticationManager authenticationManager, TokenService tokenService,
             UserServiceInterface userServiceInterface) {
@@ -40,6 +43,7 @@ public class AuthenticationController {
         var auth = this.authenticationManager.authenticate(usernamePassword);
         var userData = this.userServiceInterface.findByEmail(data.getEmail());
         var token = tokenService.generateToken((User) auth.getPrincipal());
+        log.info("Autenticando usuário: {}", userData.getEmail());
 
         return ResponseEntity.ok().body(new LoginResponseDto(userData.getId(), userData.getName(), userData.getEmail(),
                 userData.getContact(), userData.getRole(), token));
