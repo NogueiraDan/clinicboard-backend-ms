@@ -18,6 +18,7 @@ scrape_configs:
           __path__: /var/lib/docker/containers/*/*log
 
     pipeline_stages:
+      - docker: {}
       - json:
           expressions:
             output: log
