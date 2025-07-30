@@ -134,57 +134,222 @@ services:
       - notification-service
       - redis
 
-  # Tracking
-  zipkin:
-    image: openzipkin/zipkin
-    container_name: zipkin
-    ports:
-      - "9411:9411"
-    networks:
-      - clinicboard
+#  ========== GRAFANA STACK ==========
+  # # Tracking
+  # zipkin:
+  #   image: openzipkin/zipkin
+  #   container_name: zipkin
+  #   ports:
+  #     - "9411:9411"
+  #   networks:
+  #     - clinicboard
 
-  # Métricas
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    volumes:
-      - ./_observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - clinicboard
+  # # Métricas
+  # prometheus:
+  #   image: prom/prometheus
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./_observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - clinicboard
 
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./_observability/grafana/provisioning:/etc/grafana/provisioning
+  # grafana:
+  #   image: grafana/grafana
+  #   container_name: grafana
+  #   volumes:
+  #     - grafana-storage:/var/lib/grafana
+  #     - ./_observability/grafana/provisioning:/etc/grafana/provisioning
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - clinicboard
+
+  # # Logs
+  # loki:
+  #   image: grafana/loki:latest
+  #   container_name: loki
+  #   ports:
+  #     - "3100:3100"
+  #   networks:
+  #     - clinicboard
+
+  # promtail:
+  #   image: grafana/promtail:latest
+  #   container_name: promtail
+  #   volumes:
+  #     - /var/lib/docker/containers:/var/lib/docker/containers
+  #     - ./_observability/promtail/config.yml:/etc/promtail/config.yml
+  #   networks:
+  #     - clinicboard
+
+  # ========== ELK STACK ============
+
+  # ELK Stack - Elasticsearch (Logs + Métricas)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SECURITY_ADMIN_USER=admin
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=clinicboard-cluster
+      - network.host=0.0.0.0
+      - xpack.monitoring.collection.enabled=true
+      - ingest.geoip.downloader.enabled=false
+      - xpack.ml.enabled=false
+      - bootstrap.memory_lock=false
     ports:
-      - "3000:3000"
-    networks:
-      - clinicboard
-
-  # Logs
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - "3100:3100"
-    networks:
-      - clinicboard
-
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
+      - "9200:9200"
+      - "9300:9300"
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers
-      - ./_observability/promtail/config.yml:/etc/promtail/config.yml
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./_observability/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     networks:
       - clinicboard
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+
+  
+  # Logstash (Processamento de Logs e Métricas)
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    volumes:
+      - ./_observability/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./_observability/logstash/config:/usr/share/logstash/config
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
+      - LOG_LEVEL=info
+      - XPACK_MONITORING_ENABLED=false
+    networks:
+      - clinicboard
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+  
+  # Filebeat (Coleta de Logs)
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: filebeat
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./_observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat_data:/usr/share/filebeat/data
+    networks:
+      - clinicboard
+    depends_on:
+      - logstash
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "filebeat test config"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Metricbeat (Coleta de Métricas)
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.11.0
+    container_name: metricbeat
+    user: root
+    command: ["metricbeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./_observability/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+      - metricbeat_data:/usr/share/metricbeat/data
+    environment:
+      - ELASTICSEARCH_HOSTS=elasticsearch:9200
+    networks:
+      - clinicboard
+    depends_on:
+      - logstash
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "metricbeat test config"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+  # APM Server (Tracing)
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.11.0
+    container_name: apm-server
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./_observability/apm-server/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    networks:
+      - clinicboard
+    depends_on:
+      - elasticsearch
+      - kibana
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8200/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Configurações de memória
+    mem_limit: 512m
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_HOST=kibana:5601
+      - APM_SERVER_ILM_ENABLED=false
+
+  # Kibana (Visualização)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=clinicboard-encryption-key-32-chars
+    volumes:
+      - ./_observability/kibana/config:/usr/share/kibana/config
+      - ./_observability/kibana/dashboards:/usr/share/kibana/dashboards
+      - kibana_data:/usr/share/kibana/data
+    networks:
+      - clinicboard
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Configurações de memória
+    mem_limit: 1g
+
 
 networks:
   clinicboard:
@@ -193,4 +358,8 @@ networks:
 volumes:
   redis_data:
   rabbitmq_data:
-  grafana-storage:
+  elasticsearch_data:
+  filebeat_data:
+  metricbeat_data:
+  kibana_data:
+  # grafana-storage:
