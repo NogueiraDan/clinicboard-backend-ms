@@ -1,0 +1,50 @@
+{
+  "index_patterns": ["clinicboard-*"],
+  "priority": 1,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.refresh_interval": "5s",
+      "index.codec": "best_compression"
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "service_name": {
+          "type": "keyword"
+        },
+        "service_type": {
+          "type": "keyword"
+        },
+        "log_level": {
+          "type": "keyword"
+        },
+        "data_type": {
+          "type": "keyword"
+        },
+        "message": {
+          "type": "text",
+          "analyzer": "standard"
+        },
+        "container": {
+          "properties": {
+            "name": {
+              "type": "keyword"
+            },
+            "id": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    }
+  },
+  "composed_of": [],
+  "version": 1,
+  "_meta": {
+    "description": "Template para logs do ClinicBoard"
+  }
+}
