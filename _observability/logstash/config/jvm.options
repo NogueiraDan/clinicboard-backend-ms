@@ -1,6 +1,0 @@
--Xmx256m
--Xms256m
--XX:+UseG1GC
--Djava.awt.headless=true
--Dfile.encoding=UTF-8
--Dlog4j2.formatMsgNoLookups=true
