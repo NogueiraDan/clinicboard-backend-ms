@@ -28,7 +28,7 @@ services:
 
   redis:
     image: redis
-    container_name: clinicboard-redis
+    container_name: redis
     restart: on-failure
     ports:
       - 6379:6379
@@ -37,13 +37,27 @@ services:
     networks:
       - clinicboard
 
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: on-failure
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    networks:
+      - clinicboard
+    depends_on:
+      - redis
+
   rabbitmq:
-    image: "rabbitmq:3.8.6-management"
+    image: "rabbitmq:3.12-management"
     container_name: rabbitmq
     restart: on-failure
     ports:
       - 5672:5672
       - 15672:15672
+      - 15692:15692
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -51,6 +65,11 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - clinicboard
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   user-service:
     build:
@@ -150,6 +169,7 @@ services:
     container_name: prometheus
     volumes:
       - ./_observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./_observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml
     ports:
       - "9090:9090"
     networks:

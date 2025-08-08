@@ -2,7 +2,7 @@ package com.clinicboard.business_service.application.dto;
 
 import java.time.LocalDateTime;
 
-import com.clinicboard.business_service.domain.entity.AppointmentStatus;
+import com.clinicboard.business_service.domain.model.enums.AppointmentStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

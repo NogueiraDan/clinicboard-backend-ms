@@ -1,0 +1,100 @@
+groups:
+  - name: clinicboard-microservices
+    rules:
+      # Alerta para alta taxa de erros 5xx
+      - alert: HighErrorRate5xx
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5..", job="spring-actuator"}[5m])) by (instance) / sum(rate(http_server_requests_seconds_count{job="spring-actuator"}[5m])) by (instance) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "Alta taxa de erros 5xx no serviço {{ $labels.instance }}"
+          description: "O serviço {{ $labels.instance }} está com taxa de erro 5xx acima de 5% por mais de 2 minutos. Valor atual: {{ $value | humanizePercentage }}"
+
+      # Alerta para alta latência
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job="spring-actuator"}[5m])) by (le, instance)) > 2
+        for: 3m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "Alto tempo de resposta no serviço {{ $labels.instance }}"
+          description: "P95 de tempo de resposta do serviço {{ $labels.instance }} está acima de 2 segundos por mais de 3 minutos. Valor atual: {{ $value }}s"
+
+      # Alerta para Circuit Breaker aberto
+      - alert: CircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state == 1
+        for: 1m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+          circuit_breaker: "{{ $labels.name }}"
+        annotations:
+          summary: "Circuit Breaker {{ $labels.name }} está aberto"
+          description: "O Circuit Breaker {{ $labels.name }} no serviço {{ $labels.instance }} está aberto há mais de 1 minuto"
+
+      # Alerta para uso alto de CPU
+      - alert: HighCpuUsage
+        expr: process_cpu_usage{job="spring-actuator"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "Alto uso de CPU no serviço {{ $labels.instance }}"
+          description: "O serviço {{ $labels.instance }} está usando mais de 80% da CPU por mais de 5 minutos. Valor atual: {{ $value | humanizePercentage }}"
+
+      # Alerta para uso alto de memória heap
+      - alert: HighHeapMemoryUsage
+        expr: (sum(jvm_memory_used_bytes{area="heap", job="spring-actuator"}) by (instance) / sum(jvm_memory_max_bytes{area="heap", job="spring-actuator"}) by (instance)) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "Alto uso de memória heap no serviço {{ $labels.instance }}"
+          description: "O serviço {{ $labels.instance }} está usando mais de 85% da memória heap por mais de 5 minutos. Valor atual: {{ $value | humanizePercentage }}"
+
+      # Alerta para serviço indisponível
+      - alert: ServiceDown
+        expr: up{job="spring-actuator"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.instance }}"
+        annotations:
+          summary: "Serviço {{ $labels.instance }} está indisponível"
+          description: "O serviço {{ $labels.instance }} não está respondendo às verificações de health há mais de 1 minuto"
+
+      # Alerta para muitas mensagens na fila RabbitMQ
+      - alert: RabbitMQHighQueueSize
+        expr: rabbitmq_queue_messages > 1000
+        for: 5m
+        labels:
+          severity: warning
+          queue: "{{ $labels.queue }}"
+        annotations:
+          summary: "Fila RabbitMQ {{ $labels.queue }} com muitas mensagens"
+          description: "A fila {{ $labels.queue }} tem mais de 1000 mensagens pendentes por mais de 5 minutos. Valor atual: {{ $value }}"
+
+      # Alerta para baixo hit rate do Redis
+      - alert: RedisLowHitRate
+        expr: redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Baixa taxa de hit no cache Redis"
+          description: "O Redis está com taxa de hit abaixo de 50% por mais de 10 minutos. Valor atual: {{ $value | humanizePercentage }}"
+
+      # Alerta para SLA abaixo do esperado
+      - alert: SLABelowTarget
+        expr: (1 - (sum(rate(http_server_requests_seconds_count{status=~"5..", job="spring-actuator"}[24h])) / sum(rate(http_server_requests_seconds_count{job="spring-actuator"}[24h])))) < 0.999
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SLA abaixo de 99.9% nas últimas 24 horas"
+          description: "O SLA geral do sistema está abaixo de 99.9% nas últimas 24 horas. Valor atual: {{ $value | humanizePercentage }}"
