@@ -82,9 +82,9 @@ O **Business Service** passou por uma **refatoração arquitetural completa**, m
         ┌──────────────────┼──────────────────┐
         │                  │                  │
 ┌─────────────┐   ┌─────────────────┐   ┌─────────────┐
-│INFRASTRUCTURE│   │     DOMAIN      │   │INFRASTRUCTURE│
-│   (Inbound)  │   │  (Rich Models)  │   │  (Outbound) │
-│ Web/REST API │   │ Business Rules  │   │ JPA/Messaging│
+│INFRASTRUCTUR│   │     DOMAIN      │   │INFRASTRUCTUR│
+│   (Inbound) │   │  (Rich Models)  │   │  (Outbound) │
+│ Web/REST API│   │ Business Rules  │   │ JPA/Messag. │
 └─────────────┘   │ Testável isolado│   └─────────────┘
                   └─────────────────┘
                           ↑
