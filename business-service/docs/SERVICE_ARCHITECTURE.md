@@ -1,6 +1,5 @@
 # Arquitetura Hexagonal
 
-
 ### 🏗️ **Estrutura**:
 
 ```
@@ -19,25 +18,23 @@ src/main/java/com/clinicboard/business_service/
 │   ├── service/                     # Domain Services
 │   │   ├── AppointmentSchedulingService.java
 │   │   └── PatientRegistrationService.java
+│   ├── port/                        # Domain Ports (interfaces)
+│   │   ├── AppointmentRepositoryPort.java
+│   │   └── PatientRepositoryPort.java
 │   └── event/                       # Eventos de Domínio
 │       ├── AppointmentScheduledEvent.java
 │       ├── AppointmentCancelledEvent.java
 │       └── PatientRegisteredEvent.java
 │
 ├── application/                     # 🟡 CAMADA DE APLICAÇÃO
-│   ├── dto/                         # DTOs de entrada/saída
-│   │   ├── command/                 # Commands (entrada)
-│   │   │   ├── ScheduleAppointmentCommand.java
-│   │   │   └── RegisterPatientCommand.java
-│   │   ├── query/                   # Queries (consulta)
-│   │   │   ├── AppointmentQuery.java
-│   │   │   └── PatientQuery.java
-│   │   └── response/                # Responses (saída)
-│   │       ├── AppointmentResponse.java
-│   │       └── PatientResponse.java
+│   ├── dto/                         # DTOs simples (entrada/saída)
+│   │   ├── AppointmentRequestDto.java
+│   │   ├── AppointmentResponseDto.java
+│   │   ├── PatientRequestDto.java
+│   │   └── PatientResponseDto.java
 │   ├── mapper/                      # Mappers Domain ↔ DTO
-│   │   ├── AppointmentDtoMapper.java
-│   │   └── PatientDtoMapper.java
+│   │   ├── DomainAppointmentMapper.java
+│   │   └── DomainPatientMapper.java
 │   ├── port/                        # Portas de Aplicação
 │   │   ├── inbound/                 # Portas de entrada
 │   │   │   ├── AppointmentUseCase.java
@@ -46,7 +43,9 @@ src/main/java/com/clinicboard/business_service/
 │   │       ├── AppointmentRepository.java
 │   │       ├── PatientRepository.java
 │   │       ├── UserServicePort.java
-│   │       └── EventPublisher.java
+│   │       ├── UserService.java
+│   │       ├── EventPublisher.java
+│   │       └── EventPublisherPort.java
 │   └── usecase/                     # Casos de Uso (orquestração)
 │       ├── AppointmentUseCaseImpl.java
 │       └── PatientUseCaseImpl.java
@@ -59,6 +58,8 @@ src/main/java/com/clinicboard/business_service/
 │   ├── persistence/                 # Adaptadores de persistência
 │   │   ├── entity/                  # Entidades JPA
 │   │   │   ├── AppointmentEntity.java
+│   │   │   ├── AppointmentStatusEntity.java
+│   │   │   ├── AppointmentTypeEntity.java
 │   │   │   └── PatientEntity.java
 │   │   ├── repository/              # Repositories Spring Data
 │   │   │   ├── SpringAppointmentRepository.java
@@ -70,18 +71,22 @@ src/main/java/com/clinicboard/business_service/
 │   │       ├── AppointmentEntityMapper.java
 │   │       └── PatientEntityMapper.java
 │   ├── messaging/                   # Adaptadores de mensageria
+│   │   ├── dto/                     # DTOs de mensagem
+│   │   │   ├── AppointmentScheduledMessageDto.java
+│   │   │   └── AppointmentCancelledMessageDto.java
 │   │   └── RabbitMQEventPublisher.java
 │   └── external/                    # Clientes externos (Feign)
 │       ├── dto/                     # DTOs externos
-│       │   └── UserResponseDto.java
+│       │   ├── UserResponseDto.java
+│       │   └── UserRole.java
 │       ├── UserFeignClient.java
+│       ├── FeignUserService.java
 │       └── UserServiceAdapter.java
 │
 ├── common/                          # 🟢 UTILITÁRIOS COMPARTILHADOS
 │   └── error/                       # Exceções de negócio
-│       ├── AppointmentNotFoundException.java
 │       ├── BusinessException.java
-│       └── PatientNotFoundException.java
+│       └── CustomGenericException.java
 │
 ├── config/                          # Configurações Spring
 │   └── RabbitMQConfig.java
