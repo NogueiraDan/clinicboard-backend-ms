@@ -95,148 +95,126 @@ src/main/java/com/clinicboard/business_service/
 
 ---
 
-## 🏗️ **Diagrama de Componentes**
+## 🏗️ **Diagrama Hexagonal**
 
-### **Visão Completa do Sistema**
+### **🔷 Arquitetura Hexagonal - Business Service**
 ```
-                                🌍 EXTERNAL ECOSYSTEM
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│  📱 BFF           🔗 User Service      📨 RabbitMQ        🗄️ PostgreSQL       │
-│ (NestJS)         (Spring Boot)        (Message Broker)    (Database)            │
-└─────┬─────────────────┬─────────────────┬─────────────────┬─────────────────────┘
-      │                 │                 │                 │
-      │ HTTP/REST       │ HTTP/REST       │ AMQP            │ JDBC
-      │                 │ (Feign Client)  │ (Events)        │ (JPA)
-      │                 │                 │                 │
-┌─────▼─────────────────▼─────────────────▼─────────────────▼───────────────────┐
-│                          🔧 INFRASTRUCTURE LAYER                              │
-├───────────────────────────────────────────────────────────────────────────────┤
-│                                                                               │
-│  🌐 WEB ADAPTERS        💾 PERSISTENCE       📨 MESSAGING      🔗 EXTERNAL  │
-│  ┌─────────────────┐   ┌──────────────────┐  ┌─────────────┐   ┌──────────┐   │
-│  │ @RestController │   │ JPA Entities     │  │ RabbitMQ    │   │ Feign    │   │
-│  │ - Controllers   │   │ - PatientEntity  │  │ Publisher   │   │ Clients  │   │
-│  │ - Exception     │   │ - AppointmntEnt. │  │ - Circuit   │   │ - User   │   │
-│  │   Handlers      │   │ - Spring Repos   │  │   Breaker   │   │   Service│   │
-│  │ - Request/      │   │ - Adapters       │  │ - DLQ       │   │ - DTOs   │   │
-│  │   Response DTOs │   │ - Entity Mappers │  │   Fallback  │   │ - Adapter│   │
-│  └─────────────────┘   └──────────────────┘  └─────────────┘   └──────────┘   │
-│           │                        │                   │              │       │
-└───────────┼────────────────────────┼───────────────────┼──────────────┼───────┘
-            │                        │                   │              │
-            │ Inbound Port           │ Outbound Port     │              │
-            │ Calls                  │ Implementation    │              │
-            │                        │                   │              │
-┌───────────▼────────────────────────▼───────────────────▼──────────────▼───────┐
-│                          🚀 APPLICATION LAYER                                 │
-├───────────────────────────────────────────────────────────────────────────────┤
-│                                                                               │
-│  📋 USE CASES                    🔌 PORTS (CONTRACTS)                        │
-│  ┌─────────────────────────────┐  ┌─────────────────────────────────────────┐ │
-│  │                             │  │                                         │ │
-│  │ PatientUseCaseImpl          │  │        INBOUND PORTS                    │ │
-│  │ ┌─────────────────────────┐ │  │  ┌─────────────────────────────────────┐│ │
-│  │ │ • registerPatient()     │ │◄─┤  │ PatientUseCase                      ││ │
-│  │ │ • findPatient()         │ │  │  │ • registerPatient()                 ││ │
-│  │ │ • updatePatient()       │ │  │  │ • findPatient()                     ││ │
-│  │ │ • listPatients()        │ │  │  │ • updatePatient()                   ││ │
-│  │ └─────────────────────────┘ │  │  │ • listPatients()                    ││ │
-│  │                             │  │  └─────────────────────────────────────┘│ │
-│  │ AppointmentUseCaseImpl      │  │                                         │ │
-│  │ ┌─────────────────────────┐ │  │  ┌─────────────────────────────────────┐│ │
-│  │ │ • scheduleAppointment() │ │◄─┤  │ AppointmentUseCase                  ││ │
-│  │ │ • cancelAppointment()   │ │  │  │ • scheduleAppointment()             ││ │
-│  │ │ • rescheduleAppontmnt() │ │  │  │ • cancelAppointment()               ││ │
-│  │ │ • findAppointments()    │ │  │  │ • rescheduleAppointment()           ││ │
-│  │ └─────────────────────────┘ │  │  │ • findAppointments()                ││ │
-│  └─────────────────────────────┘  │  └─────────────────────────────────────┘│ │
-│                                   │                                         │ │
-│                                   │        OUTBOUND PORTS                   │ │
-│                                   │  ┌─────────────────────────────────────┐│ │
-│                                   │  │ PatientRepository                   ││ │
-│                                   │  │ • save() • findById()               ││ │
-│                                   │  │ • findByEmail() • exists()          ││ │
-│                                   │  └─────────────────────────────────────┘│ │
-│                                   │  ┌─────────────────────────────────────┐│ │
-│                                   │  │ AppointmentRepository               ││ │
-│                                   │  │ • save() • findById()               ││ │
-│                                   │  │ • findByPatient() • findByProf()    ││ │
-│                                   │  └─────────────────────────────────────┘│ │
-│                                   │  ┌─────────────────────────────────────┐│ │
-│                                   │  │ EventPublisher                      ││ │
-│                                   │  │ • publishAppointmentScheduled()     ││ │
-│                                   │  │ • publishPatientRegistered()        ││ │
-│                                   │  └─────────────────────────────────────┘│ │
-│                                   │  ┌─────────────────────────────────────┐│ │
-│                                   │  │ UserServicePort                     ││ │
-│                                   │  │ • validateProfessional()            ││ │
-│                                   │  │ • findProfessional()                ││ │
-│                                   │  └─────────────────────────────────────┘│ │
-│                                   └─────────────────────────────────────────┘ │
-└───────────────────────────────────────┼───────────────────────────────────────┘
-                                        │ Domain Dependencies
-                                        │ (Always inward)
-                                        │
-┌───────────────────────────────────────▼───────────────────────────────────────┐
-│                            ❤️ DOMAIN LAYER                                     
-├───────────────────────────────────────────────────────────────────────────────┤
-│                                                                                │ |
-│  🏛️ AGGREGATES                           🎯 VALUE OBJECTS                     │ |
-│  ┌─────────────────────────────────────┐  ┌─────────────────────────────────┐  │ |
-│  │                                     │  │                                 │  │ |  
-│  │         Patient                     │  │         Contact                 │  │ |
-│  │  ┌─────────────────────────────────┐ │  │  ┌─────────────────────────────┐  │ │
-│  │  │ - id: String                    │ │  │  │ - email: String             │  │ │
-│  │  │ - name: String                  │ │  │  │ - phone: String             │  │ │
-│  │  │ - contact: Contact              │◄┼──┼──┤ - validate()                │  │ │
-│  │  │ - professionalId: ProfessionalId│ │  │  │ - isValidEmail()            │  │ │
-│  │  │                                 │ │  │  └─────────────────────────────┘  │ │
-│  │  │ + register()                    │ │  │                                   │ │
-│  │  │ + updateContact()               │ │  │     AppointmentTime               │ │
-│  │  │ + validate()                    │ │  │  ┌─────────────────────────────┐  │ │
-│  │  │ + isActive()                    │ │  │  │ - dateTime: LocalDateTime   │  │ │
-│  │  └─────────────────────────────────┘ │  │  │ - duration: Duration        │  │ │
-│  │                                     │  │  │ - validate()                 │  │ │
-│  │  ┌─────────────────────────────────┐ │  │  │ - getEndTime()              │  │ │
-│  │  │ - id: String                    │ │  │  └─────────────────────────────┘  │ │
-│  │  │ - patientId: String             │ │  │                                   │ │
-│  │  │ - professionalId: ProfessionalId│ │  │     ProfessionalId                │ │
-│  │  │ - appointmentTime: AppmntTime   │◄┼──┼──┐┌─────────────────────────────┐ │ │
-│  │  │ - status: AppointmentStatus     │ │  │  ││ - value: String             │ │ │
-│  │  │ - type: AppointmentType         │ │  │  ││ - validate()                │ │ │
-│  │  │ - notes: String                 │ │  │  ││ - isValid()                 │ │ │
-│  │  │                                 │ │  │  │└─────────────────────────────┘ │ │
-│  │  │ + schedule() [FACTORY]          │ │  │  └───────────────────────────┘    | │
-│  │  │ + cancel()                      │ │  │                                   │ │
-│  │  │ + reschedule()                  │ │  │                                   │ │
-│  │  │ + validate()                    │ │  │                                   │ │
-│  │  │ + isScheduled()                 │ │  │                                   │ │
-│  │  └─────────────────────────────────┘ │  │                                   │ │
-│  └─────────────────────────────────────┘  │                                    │ │
-│                                           │                                    │ │
-│  📊 DOMAIN SERVICES                        │  🎪 DOMAIN EVENTS                │ │
-│  ┌─────────────────────────────────────┐  │  ┌─────────────────────────────┐   │ │
-│  │                                     │  │  │                             │   │ │
-│  │  AppointmentSchedulingService       │  │  │  AppointmentScheduledEvent  │   │ │
-│  │  ┌─────────────────────────────────┐│  │  │  ┌─────────────────────────┐   │ │
-│  │  │ + validateTimeSlot()            ││  │  │  │ - appointmentId         │   │ │
-│  │  │ + checkAvailability()           ││  │  │  │ - patientId             │   │ │
-│  │  │ + applyBusinessRules()          ││  │  │  │ - professionalId        │   │ │
-│  │  │ + validateProfessionalLimit()   ││  │  │  │ - dateTime              │   │ │
-│  │  └─────────────────────────────────┘│  │  │  │ - occurredAt            │   │ │
-│  │                                     │  │  │  └─────────────────────────┘ │  │ │
-│  │  PatientRegistrationService         │  │  │                             │    │ │
-│  │  ┌───────────────────────────────── │  │  │  PatientRegisteredEvent        │ │
-│  │  │ + validatePatientData()         ││  │  │  ┌─────────────────────────┐ │ │ │
-│  │  │ + checkDuplication()            ││  │  │  │ - patientId             │ │ │ │
-│  │  │ + applyRegistrationRules()      ││  │  │  │ - name                  │ │ │ │
-│  │  │ + validateProfessionalAccess()  ││  │  │  │ - email                 │ │ │ │
-│  │  └─────────────────────────────────┘│  │  │  │ - professionalId        │ │ │ │
-│  └─────────────────────────────────────┘  │  │  │ - occurredAt            │ │ │ │
-│                                           │  │  └─────────────────────────┘ │ │ │
-│                                           └──┼──────────────────────────────┘ │ │
-│                                              └────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────────────────┘
+                                    🌍 EXTERNAL WORLD
+                    ┌─────────────────────────────────────────────────┐
+                    │                                                   │
+           📱 BFF──│── HTTP/REST ──┐                   ┌── HTTP/REST  ──│── 🔗 User Service
+         (NestJS)   │               │                   │               │   (Spring Boot)
+                    │               ▼                   ▼               │
+                    │        ┌─────────────┐     ┌─────────────┐        │
+                    │        │🌐 REST      │     │🔗 Feign    │        │
+                    │        │Controllers  │     │Client       │        │
+                    │        │- Appointment│     │- UserService│        │
+                    │        │- Patient    │     │- Validation │        │
+                    │        │- Exception  │     │- Circuit    │        │
+                    │        │  Handler    │     │  Breaker    │        │
+                    │        └─────────────┘     └─────────────┘        │
+                    │               │                   │               │
+                    │               ▼                   ▼               │
+              ┌─────┼───────────────────────────────────────────────────┼─────┐
+              │     │         � INFRASTRUCTURE ADAPTERS               │     │
+              │     └─────────────────────────────────────────────────────────┘     │
+              │                             │                   │                   │
+              │                             ▼                   ▼                   │
+              │                   ┌─────────────┐     ┌─────────────┐               │
+              │                   │📋 Inbound   │     │📤 Outbound │               │
+              │                   │Port Calls   │     │Port Impls   │               │
+              │                   └─────────────┘     └─────────────┘               │
+              │                             │                   │                   │
+              ▼                             ▼                   ▼                   ▼
+    ┌─────────────┐                 ╔═════════════════════════════════╗     ┌─────────────┐
+    │💾 JPA       │                 ║                                 ║     │📨 RabbitMQ  │
+    │Persistence  │────── JDBC ─────║         🚀 APPLICATION         ║─────│Messaging    │
+    │- Entities   │                 ║                                 ║     │- Events     │
+    │- Repos      │                 ║   📋 USE CASES & 🔌 PORTS      ║     │- Circuit    │
+    │- Adapters   │                 ║                                 ║     │  Breaker    │
+    │- Mappers    │                 ║  ┌─────────────────────────┐    ║     │- DLQ        │
+    └─────────────┘                 ║  │🎯 AppointmentUseCase    │    ║     │- Fallback   │
+              ▲                     ║  │• schedule()             │    ║     └─────────────┘
+              │                     ║  │• cancel()               │    ║             ▲
+              │                     ║  │• reschedule()           │    ║             │
+              ▼                     ║  │• findAppointments()     │    ║             │
+    🗄️ PostgreSQL                   ║  └─────────────────────────┘    ║          AMQP
+     (Database)                     ║                                 ║             │
+                                    ║  ┌─────────────────────────┐    ║             ▼
+                                    ║  │👥 PatientUseCase        │    ║     📨 RabbitMQ Broker
+                                    ║  │• registerPatient()      │    ║        (Message Queue)
+                                    ║  │• findPatient()          │    ║
+                                    ║  │• updatePatient()        │    ║
+                                    ║  │• listPatients()         │    ║
+                                    ║  └─────────────────────────┘    ║
+                                    ║                                 ║
+                                    ║  🔌 OUTBOUND PORTS             ║
+                                    ║  • AppointmentRepository        ║
+                                    ║  • PatientRepository            ║
+                                    ║  • EventPublisher               ║
+                                    ║  • UserServicePort              ║
+                                    ╚═════════════════════════════════╝
+                                                      │
+                                                      ▼
+                                    ╔═════════════════════════════════╗
+                                    ║                                 ║
+                                    ║        ❤️ DOMAIN CORE           ║
+                                    ║                                 ║
+                                    ║  🏛️ AGGREGATES                  ║
+                                    ║  ┌─────────────────────────┐    ║
+                                    ║  │📅 Appointment           │    ║
+                                    ║  │• schedule() [FACTORY]   │    ║
+                                    ║  │• cancel()               │    ║
+                                    ║  │• reschedule()           │    ║
+                                    ║  │• validate()             │    ║
+                                    ║  └─────────────────────────┘    ║
+                                    ║                                 ║
+                                    ║  ┌─────────────────────────┐    ║
+                                    ║  │👤 Patient               │    ║
+                                    ║  │• register()             │    ║
+                                    ║  │• updateContact()        │    ║
+                                    ║  │• validate()             │    ║
+                                    ║  └─────────────────────────┘    ║
+                                    ║                                 ║
+                                    ║  🎯 VALUE OBJECTS               ║
+                                    ║  • AppointmentTime              ║
+                                    ║  • Contact                      ║
+                                    ║  • ProfessionalId               ║
+                                    ║                                 ║
+                                    ║  📊 DOMAIN SERVICES             ║
+                                    ║  • AppointmentSchedulingService ║
+                                    ║  • PatientRegistrationService   ║
+                                    ║                                 ║
+                                    ║  🎪 DOMAIN EVENTS               ║
+                                    ║  • AppointmentScheduledEvent    ║
+                                    ║  • AppointmentCancelledEvent    ║
+                                    ║  • PatientRegisteredEvent       ║
+                                    ║                                 ║
+                                    ╚═════════════════════════════════╝
+```
+
+### **🎯 Fluxo de Dependências (Hexagonal)**
+```
+🌍 External World
+    ↓ (HTTP/REST, AMQP, JDBC)
+🔧 Infrastructure Adapters
+    ↓ (Port Calls & Implementations)
+🚀 Application Layer (Use Cases & Ports)
+    ↓ (Pure Domain Calls - No External Dependencies)
+❤️ Domain Core (Aggregates, Services, Events)
+```
+
+### **⚡ Fluxo de Request (Exemplo: Agendar Consulta)**
+```
+1. 📱 BFF → HTTP POST /appointments
+2. 🌐 AppointmentController.schedule()
+3. 🚀 AppointmentUseCase.schedule()
+4. ❤️ Patient.validate() + Appointment.schedule()
+5. 🔌 AppointmentRepository.save() (Port)
+6. 💾 JpaAppointmentRepositoryAdapter.save()
+7. 🗄️ PostgreSQL (Persistence)
+8. 📨 EventPublisher.publishAppointmentScheduled()
+9. 🐰 RabbitMQEventPublisher → RabbitMQ
 ```
 
 ---
