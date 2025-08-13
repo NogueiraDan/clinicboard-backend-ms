@@ -58,6 +58,10 @@ O sistema é composto por múltiplos microsserviços Spring Boot registrados via
   * **Testes de unidade** com mocks (Mockito)
   * **Testes de integração** com Testcontainers
 * Sugira também estratégias de fallback e logs significativos nas falhas.
+* Analise cada solicitação sempre se mantendo atento ao dominio de negocio para evitar que decisões técnicas comprometam a aderência à filosofia, principios e conceitos do Domain-Driven Design.
+* Siga fielmente as camadas da Arquitetura Hexagonal: domain, application e infrastructure.
+* Seja fiel à filosofia do Domain-Driven Design e todos seus principios e conceitos preditos por Vlad Khononov
+na sua obra "Learning Domain-Driven Design: Aligning Software Architecture and Business Strategy"
 
 ---
 
@@ -92,23 +96,32 @@ O sistema é composto por múltiplos microsserviços Spring Boot registrados via
 
 ---
 
-## 📂 Organização Padrão de Pacotes por Serviço (DDD)
-
-```text
-src/
- └── main/
-     └── java/
-         └── com.seunome.servico/
-             ├── application/
-             ├── domain/
-             │   ├── model/
-             │   └── service/
-             ├── infrastructure/
-             │   ├── persistence/
-             │   └── messaging/
-             ├── config/
-             └── api/ (controllers e DTOs)
+### 📂 Estrutura recomendada Spring Boot + DDD + Hexagonal
 ```
+src/
+├── domain/
+│   ├── model/
+│   ├── service/
+│   ├── event/
+│   └── repository/
+├── application/
+│   ├── usecase/
+│   └── port/
+│       ├── in/
+│       └── out/
+├── infrastructure/
+│   ├── adapter/
+│   │   ├── inbound/
+│   │   └── outbound/
+│   └── config/
+```
+
+---
+
+### Testabilidade
+- Teste unitário no domínio
+- Mock de adaptadores com Mockito
+- Testes de integração com banco e filas
 
 ---
 
