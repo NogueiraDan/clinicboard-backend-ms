@@ -40,12 +40,13 @@ O sistema é composto por múltiplos microsserviços Spring Boot registrados via
 ## 🧰 Regras e Comportamentos Esperados do Copilot
 
 * Gere código em **Java 17+**, idiomático, modular e baseado em boas práticas do Spring.
-* Organize o código com base nos princípios de **Domain-Driven Design (DDD)**:
+* Organize o código com base nos princípios da **Arquitetura Hexagonal + DDD**:
 
   * **Camada de Domínio:** entidades ricas, agregados e objetos de valor.
   * **Camada de Aplicação:** casos de uso e orquestração de lógica.
   * **Camada de Infraestrutura:** repositórios, gateways externos, integrações.
 * Sugira interfaces limpas, inversion of control e separação entre as camadas.
+* As camadas da arquitetura hexagonal que devem existir são: Domain, Application(donde tem as portas) e Infrastructure(Donde tem os adaptadores)
 * Sempre que sugerir comunicação entre microsserviços, considere:
 
   * **Feign Clients + Resilience4j** para chamadas síncronas.
@@ -62,6 +63,8 @@ O sistema é composto por múltiplos microsserviços Spring Boot registrados via
 * Siga fielmente as camadas da Arquitetura Hexagonal: domain, application e infrastructure.
 * Seja fiel à filosofia do Domain-Driven Design e todos seus principios e conceitos preditos por Vlad Khononov
 na sua obra "Learning Domain-Driven Design: Aligning Software Architecture and Business Strategy"
+* Sempre siga a estrutura recomendada neste arquivo. ISTO É MUITO IMPORTANTE!
+
 
 ---
 
