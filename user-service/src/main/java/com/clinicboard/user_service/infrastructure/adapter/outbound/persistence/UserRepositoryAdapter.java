@@ -1,9 +1,9 @@
 package com.clinicboard.user_service.infrastructure.adapter.outbound.persistence;
 
+import com.clinicboard.user_service.application.port.outbound.UserRepositoryPort;
 import com.clinicboard.user_service.domain.model.User;
 import com.clinicboard.user_service.domain.model.valueobjects.Email;
 import com.clinicboard.user_service.domain.model.valueobjects.UserId;
-import com.clinicboard.user_service.domain.repository.UserRepositoryPort;
 import com.clinicboard.user_service.infrastructure.adapter.outbound.persistence.entity.UserJpaEntity;
 import com.clinicboard.user_service.infrastructure.adapter.outbound.persistence.mapper.UserPersistenceMapper;
 import com.clinicboard.user_service.infrastructure.adapter.outbound.persistence.repository.UserJpaRepository;

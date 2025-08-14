@@ -1,4 +1,4 @@
-package com.clinicboard.user_service.domain.repository;
+package com.clinicboard.user_service.application.port.outbound;
 
 import com.clinicboard.user_service.domain.model.User;
 import com.clinicboard.user_service.domain.model.valueobjects.Email;

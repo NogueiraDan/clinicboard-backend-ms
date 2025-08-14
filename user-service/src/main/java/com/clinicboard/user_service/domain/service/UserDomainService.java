@@ -1,8 +1,8 @@
 package com.clinicboard.user_service.domain.service;
 
+import com.clinicboard.user_service.application.port.outbound.UserRepositoryPort;
 import com.clinicboard.user_service.domain.model.User;
 import com.clinicboard.user_service.domain.model.valueobjects.Email;
-import com.clinicboard.user_service.domain.repository.UserRepositoryPort;
 
 import java.util.List;
 
