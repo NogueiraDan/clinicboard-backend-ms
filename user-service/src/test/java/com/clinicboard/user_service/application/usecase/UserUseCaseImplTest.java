@@ -7,7 +7,6 @@ import com.clinicboard.user_service.application.port.outbound.EventPublisher;
 import com.clinicboard.user_service.application.port.outbound.UserRepositoryPort;
 import com.clinicboard.user_service.domain.model.User;
 import com.clinicboard.user_service.domain.model.enums.UserRole;
-import com.clinicboard.user_service.domain.model.valueobjects.Email;
 import com.clinicboard.user_service.domain.model.valueobjects.UserId;
 import com.clinicboard.user_service.domain.service.UserDomainService;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,61 +82,6 @@ class UserUseCaseImplTest {
             anyString(),
             anyString(),
             anyString()
-        );
-    }
-
-    @Test
-    @DisplayName("Deve autenticar usuário com credenciais válidas")
-    void shouldAuthenticateUserWithValidCredentials() {
-        // Given
-        String email = "joao@email.com";
-        String password = "MinhaSenh@123";
-        
-        User mockUser = createMockUser();
-        UserResponseDto expectedResponse = createMockUserResponse();
-
-        when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(mockUser));
-        when(mockUser.authenticate(password)).thenReturn(true);
-        when(userMapper.toResponseDto(mockUser)).thenReturn(expectedResponse);
-
-        // When
-        UserResponseDto result = userUseCase.authenticateUser(email, password);
-
-        // Then
-        assertNotNull(result);
-        verify(userRepository).findByEmail(any(Email.class));
-    }
-
-    @Test
-    @DisplayName("Deve falhar na autenticação com credenciais inválidas")
-    void shouldFailAuthenticationWithInvalidCredentials() {
-        // Given
-        String email = "joao@email.com";
-        String wrongPassword = "SenhaErrada@123";
-        
-        User mockUser = createMockUser();
-
-        when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(mockUser));
-        when(mockUser.authenticate(wrongPassword)).thenReturn(false);
-
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
-            userUseCase.authenticateUser(email, wrongPassword)
-        );
-    }
-
-    @Test
-    @DisplayName("Deve falhar na autenticação com usuário não encontrado")
-    void shouldFailAuthenticationWithUserNotFound() {
-        // Given
-        String email = "inexistente@email.com";
-        String password = "MinhaSenh@123";
-
-        when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
-            userUseCase.authenticateUser(email, password)
         );
     }
 

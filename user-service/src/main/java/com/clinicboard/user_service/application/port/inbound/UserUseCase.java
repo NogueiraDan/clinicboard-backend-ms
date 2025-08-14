@@ -13,8 +13,6 @@ public interface UserUseCase {
     
     UserResponseDto registerUser(UserRequestDto request);
     
-    UserResponseDto authenticateUser(String email, String password);
-    
     UserResponseDto findUserById(String userId);
     
     UserResponseDto findUserByEmail(String email);

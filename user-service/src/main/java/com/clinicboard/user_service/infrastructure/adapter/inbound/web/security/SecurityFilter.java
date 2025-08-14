@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.clinicboard.user_service.application.port.inbound.UserUseCase;
+import com.clinicboard.user_service.application.port.outbound.TokenServicePort;
 import com.clinicboard.user_service.application.dto.UserResponseDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,9 +20,9 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final UserUseCase userUseCase;
-    private final TokenService tokenService;
+    private final TokenServicePort tokenService;
 
-    public SecurityFilter(UserUseCase userUseCase, TokenService tokenService) {
+    public SecurityFilter(UserUseCase userUseCase, TokenServicePort tokenService) {
         this.userUseCase = userUseCase;
         this.tokenService = tokenService;
     }

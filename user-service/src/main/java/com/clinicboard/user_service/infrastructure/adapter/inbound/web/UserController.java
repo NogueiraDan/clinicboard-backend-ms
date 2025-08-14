@@ -29,14 +29,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/authenticate")
-    public ResponseEntity<UserResponseDto> authenticateUser(
-            @RequestParam String email, 
-            @RequestParam String password) {
-        UserResponseDto response = userUseCase.authenticateUser(email, password);
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable String id) {
         UserResponseDto response = userUseCase.findUserById(id);

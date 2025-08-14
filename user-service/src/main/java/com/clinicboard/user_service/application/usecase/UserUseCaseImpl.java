@@ -76,20 +76,6 @@ public class UserUseCaseImpl implements UserUseCase {
     }
     
     @Override
-    public UserResponseDto authenticateUser(String email, String password) {
-        Email emailVO = new Email(email);
-        
-        User user = userRepository.findByEmail(emailVO)
-            .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-        
-        if (!user.authenticate(password)) {
-            throw new IllegalArgumentException("Credenciais inválidas");
-        }
-        
-        return userMapper.toResponseDto(user);
-    }
-    
-    @Override
     public UserResponseDto findUserById(String userId) {
         UserId id = new UserId(userId);
         
