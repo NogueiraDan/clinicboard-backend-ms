@@ -65,8 +65,13 @@ public class AppointmentUseCaseImpl implements AppointmentUseCase {
         // Salvar
         Appointment savedAppointment = appointmentRepository.save(appointment);
         
-        // Publicar evento via messaging (compatibilidade com sistema atual)
-        eventPublisher.publishAppointmentScheduled(request);
+        // Publicar todos os eventos de domínio gerados pelo agregado
+        savedAppointment.getDomainEvents().forEach(event -> {
+            if (event instanceof com.clinicboard.business_service.domain.event.DomainEvent) {
+                eventPublisher.publishEvent((com.clinicboard.business_service.domain.event.DomainEvent) event);
+            }
+        });
+        savedAppointment.clearEvents();
         
         return appointmentMapper.toDto(savedAppointment);
     }
@@ -98,7 +103,15 @@ public class AppointmentUseCaseImpl implements AppointmentUseCase {
         // Cancelar usando comportamento do agregado
         appointment.cancel(reason);
         
-        appointmentRepository.save(appointment);
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+        
+        // Publicar eventos de domínio gerados pelo agregado
+        savedAppointment.getDomainEvents().forEach(event -> {
+            if (event instanceof com.clinicboard.business_service.domain.event.DomainEvent) {
+                eventPublisher.publishEvent((com.clinicboard.business_service.domain.event.DomainEvent) event);
+            }
+        });
+        savedAppointment.clearEvents();
     }
     
     @Override

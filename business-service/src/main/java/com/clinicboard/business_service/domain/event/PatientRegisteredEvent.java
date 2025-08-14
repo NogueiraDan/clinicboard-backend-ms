@@ -6,7 +6,9 @@ import java.util.Objects;
 /**
  * Evento de domínio disparado quando um paciente é registrado
  */
-public class PatientRegisteredEvent {
+public class PatientRegisteredEvent implements DomainEvent {
+    
+    public static final String ROUTING_KEY = "clinic.patient.registered";
     
     private final String patientId;
     private final String patientName;
@@ -40,6 +42,13 @@ public class PatientRegisteredEvent {
     
     public LocalDateTime getOccurredAt() {
         return occurredAt;
+    }
+    
+    /**
+     * Retorna a routing key para este evento de domínio
+     */
+    public String getRoutingKey() {
+        return ROUTING_KEY;
     }
     
     @Override

@@ -65,7 +65,7 @@ class AppointmentUseCaseImplTest {
     void shouldScheduleAppointmentSuccessfully() {
         // Given
         AppointmentRequestDto requestDto = createAppointmentRequest();
-        Appointment mockAppointment = createMockAppointment();
+        Appointment mockAppointment = createMockAppointmentWithEvents(true);
         AppointmentResponseDto expectedResponse = createAppointmentResponse("APPT-123");
 
         doNothing().when(schedulingService).validateAppointmentScheduling(any(AppointmentTime.class), any(ProfessionalId.class), anyString());
@@ -80,7 +80,7 @@ class AppointmentUseCaseImplTest {
         assertEquals("APPT-123", result.getId());
         verify(schedulingService).validateAppointmentScheduling(any(AppointmentTime.class), any(ProfessionalId.class), anyString());
         verify(appointmentRepository).save(any(Appointment.class));
-        verify(eventPublisher).publishAppointmentScheduled(any(AppointmentRequestDto.class));
+        verify(eventPublisher).publishEvent(any(com.clinicboard.business_service.domain.event.DomainEvent.class));
     }
 
     @Test
@@ -97,7 +97,7 @@ class AppointmentUseCaseImplTest {
             appointmentUseCase.scheduleAppointment(requestDto));
 
         verify(appointmentRepository, never()).save(any());
-        verify(eventPublisher, never()).publishAppointmentScheduled(any());
+        verify(eventPublisher, never()).publishEvent(any(com.clinicboard.business_service.domain.event.DomainEvent.class));
     }
 
     @Test
@@ -307,6 +307,26 @@ class AppointmentUseCaseImplTest {
     }
 
     private Appointment createMockAppointment() {
-        return mock(Appointment.class);
+        return createMockAppointmentWithEvents(false);
+    }
+    
+    private Appointment createMockAppointmentWithEvents(boolean withEvents) {
+        Appointment mockAppointment = mock(Appointment.class);
+        
+        if (withEvents) {
+            // Simula eventos de domínio no agregado
+            com.clinicboard.business_service.domain.event.AppointmentScheduledEvent event = 
+                new com.clinicboard.business_service.domain.event.AppointmentScheduledEvent(
+                    "APPT-123",
+                    "PATIENT-123", 
+                    "PROF-456",
+                    LocalDateTime.now().plusDays(1),
+                    "MARCACAO"
+                );
+            
+            when(mockAppointment.getDomainEvents()).thenReturn(java.util.List.of(event));
+        }
+        
+        return mockAppointment;
     }
 }

@@ -191,4 +191,13 @@ public class Appointment extends AbstractAggregateRoot<Appointment> {
             throw new IllegalArgumentException("ID do paciente é obrigatório");
         }
     }
+    
+    // Métodos para acessar eventos de domínio
+    public java.util.Collection<Object> getDomainEvents() {
+        return domainEvents();
+    }
+    
+    public void clearEvents() {
+        clearDomainEvents();
+    }
 }

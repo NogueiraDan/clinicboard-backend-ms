@@ -1,20 +1,26 @@
 package com.clinicboard.business_service.infrastructure.messaging;
 
-import com.clinicboard.business_service.application.dto.AppointmentRequestDto;
+import com.clinicboard.business_service.domain.event.AppointmentScheduledEvent;
+import com.clinicboard.business_service.domain.event.AppointmentCancelledEvent;
+import com.clinicboard.business_service.domain.event.PatientRegisteredEvent;
+import com.clinicboard.business_service.application.port.outbound.EventPublishingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Testes para validar Circuit Breaker + DLQ na publicação de eventos
+ * Testes para validar publicação de Domain Events via RabbitMQ
+ * com Circuit Breaker + DLQ
  */
 @ExtendWith(MockitoExtension.class)
 class RabbitMQEventPublisherTest {
@@ -24,78 +30,118 @@ class RabbitMQEventPublisherTest {
 
     private RabbitMQEventPublisher eventPublisher;
     
-    private AppointmentRequestDto appointmentRequestDto;
+    private final String exchangeName = "notification.ex";
 
     @BeforeEach
     void setUp() {
         eventPublisher = new RabbitMQEventPublisher(rabbitTemplate);
-        
-        appointmentRequestDto = new AppointmentRequestDto();
-        appointmentRequestDto.setPatientId("patient-123");
-        appointmentRequestDto.setProfessionalId("prof-456");
-        appointmentRequestDto.setDate(LocalDateTime.now().plusDays(1));
-        appointmentRequestDto.setObservation("Consulta de rotina");
+        ReflectionTestUtils.setField(eventPublisher, "exchangeName", exchangeName);
     }
 
     @Test
-    void shouldPublishAppointmentScheduledSuccessfully() {
-        // When
-        eventPublisher.publishAppointmentScheduled(appointmentRequestDto);
-        
-        // Then
-        verify(rabbitTemplate).convertAndSend(eq("appointment.scheduled"), any(Object.class));
-    }
-
-    @Test
-    void shouldPublishAppointmentCancelledSuccessfully() {
-        // When
-        eventPublisher.publishAppointmentCancelled("appointment-123", "Cancelado pelo paciente");
-        
-        // Then
-        verify(rabbitTemplate).convertAndSend(eq("appointment.cancelled"), any(Object.class));
-    }
-
-    @Test
-    void shouldPublishPatientRegisteredSuccessfully() {
-        // When
-        eventPublisher.publishPatientRegistered("patient-123", "João Silva", "prof-456");
-        
-        // Then
-        verify(rabbitTemplate).convertAndSend(eq("patient.registered"), any(Object.class));
-    }
-
-    @Test
-    void shouldSendToDLQWhenRabbitMQFails() {
-        // Given - Simula falha no RabbitMQ
-        doThrow(new RuntimeException("RabbitMQ connection failed"))
-            .when(rabbitTemplate).convertAndSend(eq("appointment.scheduled"), any(Object.class));
-        
-        // When - Tenta publicar o evento (irá para o fallback/DLQ)
-        try {
-            eventPublisher.publishAppointmentScheduled(appointmentRequestDto);
-        } catch (Exception e) {
-            // Chama o fallback manualmente (normalmente seria automático pelo Circuit Breaker)
-            eventPublisher.publishAppointmentScheduledFallback(appointmentRequestDto, e);
-        }
-        
-        // Then - Verifica que tentou publicar na fila principal e depois na DLQ
-        verify(rabbitTemplate).convertAndSend(eq("appointment.scheduled"), any(Object.class));
-        verify(rabbitTemplate).convertAndSend(eq("appointment.scheduled.dlq"), any(Object.class));
-    }
-
-    @Test
-    void shouldLogErrorWhenBothQueuesFailDuringFallback() {
-        // Given - Simula falha em ambas as filas
-        doThrow(new RuntimeException("RabbitMQ totally down"))
-            .when(rabbitTemplate).convertAndSend(anyString(), any(Object.class));
-        
-        // When/Then - Não deve lançar exceção no fallback, apenas logar
-        eventPublisher.publishAppointmentScheduledFallback(
-            appointmentRequestDto, 
-            new RuntimeException("Original failure")
+    void shouldPublishAppointmentScheduledEventSuccessfully() {
+        // Given
+        AppointmentScheduledEvent event = new AppointmentScheduledEvent(
+            "appointment-123",
+            "patient-456", 
+            "prof-789",
+            LocalDateTime.now().plusDays(1),
+            "MARCACAO"
         );
         
-        // Verifica que tentou publicar na DLQ
-        verify(rabbitTemplate).convertAndSend(eq("appointment.scheduled.dlq"), any(Object.class));
+        // When
+        eventPublisher.publishEvent(event);
+        
+        // Then
+        verify(rabbitTemplate).convertAndSend(
+            eq(exchangeName),
+            eq("clinic.appointment.scheduled"),
+            eq(event)
+        );
+    }
+
+    @Test
+    void shouldPublishAppointmentCancelledEventSuccessfully() {
+        // Given
+        AppointmentCancelledEvent event = new AppointmentCancelledEvent(
+            "appointment-123",
+            "patient-456",
+            "prof-789", 
+            LocalDateTime.now().plusDays(1),
+            "Cancelado pelo paciente"
+        );
+        
+        // When
+        eventPublisher.publishEvent(event);
+        
+        // Then
+        verify(rabbitTemplate).convertAndSend(
+            eq(exchangeName),
+            eq("clinic.appointment.cancelled"),
+            eq(event)
+        );
+    }
+
+    @Test
+    void shouldPublishPatientRegisteredEventSuccessfully() {
+        // Given
+        PatientRegisteredEvent event = new PatientRegisteredEvent(
+            "patient-123", 
+            "João Silva", 
+            "joao@email.com",
+            "prof-456"
+        );
+        
+        // When
+        eventPublisher.publishEvent(event);
+        
+        // Then
+        verify(rabbitTemplate).convertAndSend(
+            eq(exchangeName),
+            eq("clinic.patient.registered"),
+            eq(event)
+        );
+    }
+
+    @Test
+    void shouldThrowExceptionWhenRabbitTemplateFailsAndCircuitBreakerIsNotActive() {
+        // Given
+        AppointmentScheduledEvent event = new AppointmentScheduledEvent(
+            "appointment-123",
+            "patient-456", 
+            "prof-789",
+            LocalDateTime.now().plusDays(1),
+            "MARCACAO"
+        );
+        
+        doThrow(new RuntimeException("RabbitMQ connection failed"))
+            .when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
+        
+        // When & Then
+        assertThrows(EventPublishingException.class, () -> 
+            eventPublisher.publishEvent(event)
+        );
+    }
+
+    @Test
+    void shouldSendEventToDLQWhenCircuitBreakerActivates() {
+        // Given
+        AppointmentScheduledEvent event = new AppointmentScheduledEvent(
+            "appointment-123",
+            "patient-456", 
+            "prof-789",
+            LocalDateTime.now().plusDays(1),
+            "MARCACAO"
+        );
+        
+        // When - simula ativação do circuit breaker via método fallback
+        eventPublisher.publishEventFallback(event, new RuntimeException("Service unavailable"));
+        
+        // Then
+        verify(rabbitTemplate).convertAndSend(
+            eq(exchangeName),
+            eq("clinic.appointment.scheduled.failed"),
+            eq(event)
+        );
     }
 }

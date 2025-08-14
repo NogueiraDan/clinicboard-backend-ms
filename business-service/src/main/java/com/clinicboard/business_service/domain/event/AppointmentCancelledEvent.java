@@ -6,7 +6,9 @@ import java.util.Objects;
 /**
  * Evento de domínio disparado quando um agendamento é cancelado
  */
-public class AppointmentCancelledEvent {
+public class AppointmentCancelledEvent implements DomainEvent {
+    
+    public static final String ROUTING_KEY = "clinic.appointment.cancelled";
     
     private final String appointmentId;
     private final String patientId;
@@ -47,6 +49,13 @@ public class AppointmentCancelledEvent {
     
     public LocalDateTime getOccurredAt() {
         return occurredAt;
+    }
+    
+    /**
+     * Retorna a routing key para este evento de domínio
+     */
+    public String getRoutingKey() {
+        return ROUTING_KEY;
     }
     
     @Override

@@ -1,18 +1,19 @@
 package com.clinicboard.business_service.infrastructure.messaging;
 
-import com.clinicboard.business_service.application.dto.AppointmentRequestDto;
 import com.clinicboard.business_service.application.port.outbound.EventPublisher;
-import com.clinicboard.business_service.infrastructure.messaging.dto.AppointmentCancelledMessageDto;
-import com.clinicboard.business_service.infrastructure.messaging.dto.AppointmentScheduledMessageDto;
+import com.clinicboard.business_service.application.port.outbound.EventPublishingException;
+import com.clinicboard.business_service.domain.event.DomainEvent;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
- * Adaptador para publicação de eventos via RabbitMQ
- * Com Circuit Breaker e DLQ para garantir entrega dos eventos
+ * Adaptador para publicação de eventos de domínio via RabbitMQ
+ * Implementa o padrão Hexagonal seguindo princípios DDD
+ * Com Circuit Breaker e fallback inteligente para DLQ
  */
 @Component
 public class RabbitMQEventPublisher implements EventPublisher {
@@ -21,164 +22,72 @@ public class RabbitMQEventPublisher implements EventPublisher {
     
     private final RabbitTemplate rabbitTemplate;
     
-    // Configurações das filas principais
-    private static final String APPOINTMENT_SCHEDULED_QUEUE = "appointment.scheduled";
-    private static final String APPOINTMENT_CANCELLED_QUEUE = "appointment.cancelled";
-    private static final String PATIENT_REGISTERED_QUEUE = "patient.registered";
-    
-    // Configurações das DLQs (Dead Letter Queues)
-    private static final String APPOINTMENT_SCHEDULED_DLQ = "appointment.scheduled.dlq";
-    private static final String APPOINTMENT_CANCELLED_DLQ = "appointment.cancelled.dlq";
-    private static final String PATIENT_REGISTERED_DLQ = "patient.registered.dlq";
+    @Value("${broker.exchange.name}")
+    private String exchangeName;
     
     public RabbitMQEventPublisher(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }
     
     @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishAppointmentScheduledFallback")
-    public void publishAppointmentScheduled(AppointmentRequestDto appointment) {
+    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishEventFallback")
+    public void publishEvent(final DomainEvent event) {
         try {
-            // Publica evento estruturado
-            AppointmentScheduledMessageDto messageDto = new AppointmentScheduledMessageDto(
-                null, // appointmentId será preenchido pelo agregado
-                appointment.getPatientId(),
-                appointment.getProfessionalId(),
-                appointment.getDate(),
-                "SCHEDULED"
+            logger.info("Publishing domain event: {} with routing key: {}", 
+                    event.getClass().getSimpleName(), event.getRoutingKey());
+            
+            // Publica no Exchange com Routing Key (não diretamente na fila)
+            rabbitTemplate.convertAndSend(
+                exchangeName,
+                event.getRoutingKey(),
+                event
             );
             
-            messageDto.setObservation(appointment.getObservation());
-            
-            logger.info("Publicando evento de agendamento para paciente: {} e profissional: {}", 
-                       appointment.getPatientId(), appointment.getProfessionalId());
-            
-            rabbitTemplate.convertAndSend(APPOINTMENT_SCHEDULED_QUEUE, messageDto);
-            
-            logger.info("Evento de agendamento publicado com sucesso");
+            logger.debug("Domain event published successfully: {}", event);
             
         } catch (Exception e) {
-            logger.error("Erro ao publicar evento de agendamento: {}", e.getMessage(), e);
-            throw e; // Relança para ativar o Circuit Breaker
+            logger.error("Failed to publish domain event: {} - Error: {}", event, e.getMessage(), e);
+            throw new EventPublishingException("Failed to publish domain event", e);
         }
     }
     
     /**
-     * Fallback method - publica na DLQ quando Notification Service está indisponível
+     * Fallback quando o serviço está indisponível
+     * Os eventos serão automaticamente roteados para DLQ devido à configuração TTL
      */
-    public void publishAppointmentScheduledFallback(AppointmentRequestDto appointment, Throwable throwable) {
-        logger.warn("Circuit Breaker ativo - Notification Service indisponível. Enviando para DLQ. Erro: {}", 
-                   throwable.getMessage());
+    public void publishEventFallback(final DomainEvent event, final Exception ex) {
+        logger.warn("Circuit breaker activated for event publishing. Event: {} - Error: {}", 
+                event.getClass().getSimpleName(), ex.getMessage());
         
         try {
-            AppointmentScheduledMessageDto messageDto = new AppointmentScheduledMessageDto(
-                null,
-                appointment.getPatientId(),
-                appointment.getProfessionalId(),
-                appointment.getDate(),
-                "SCHEDULED"
+            // Tenta publicar com routing key de falha (será roteado para DLQ)
+            String failureRoutingKey = event.getRoutingKey() + ".failed";
+            
+            rabbitTemplate.convertAndSend(
+                exchangeName,
+                failureRoutingKey,
+                event
             );
             
-            messageDto.setObservation(appointment.getObservation());
+            logger.info("Event sent to DLQ for later processing: {}", event.getClass().getSimpleName());
             
-            // Publica na Dead Letter Queue para retry posterior
-            rabbitTemplate.convertAndSend(APPOINTMENT_SCHEDULED_DLQ, messageDto);
+        } catch (Exception fallbackEx) {
+            logger.error("CRITICAL: Failed to send event to DLQ. Event may be lost: {} - Error: {}", 
+                     event, fallbackEx.getMessage(), fallbackEx);
             
-            logger.info("Evento de agendamento enviado para DLQ com sucesso - será reprocessado automaticamente");
-            
-        } catch (Exception e) {
-            logger.error("CRÍTICO: Falha ao enviar evento para DLQ. Evento pode estar perdido: {}", e.getMessage(), e);
-            // Aqui poderíamos implementar persistência em banco como último recurso
+            // Aqui você pode implementar uma estratégia de último recurso
+            // como persistir o evento em banco para retry manual
+            persistEventForManualRetry(event, fallbackEx);
         }
     }
     
-    @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishAppointmentCancelledFallback")
-    public void publishAppointmentCancelled(String appointmentId, String reason) {
-        try {
-            AppointmentCancelledMessageDto messageDto = new AppointmentCancelledMessageDto(
-                appointmentId,
-                null, // Seria interessante recuperar os dados do agregado
-                null,
-                null,
-                reason
-            );
-            
-            logger.info("Publicando evento de cancelamento para agendamento: {}", appointmentId);
-            
-            rabbitTemplate.convertAndSend(APPOINTMENT_CANCELLED_QUEUE, messageDto);
-            
-            logger.info("Evento de cancelamento publicado com sucesso");
-            
-        } catch (Exception e) {
-            logger.error("Erro ao publicar evento de cancelamento: {}", e.getMessage(), e);
-            throw e; // Relança para ativar o Circuit Breaker
-        }
-    }
-    
-    /**
-     * Fallback method para cancelamento - publica na DLQ quando Notification Service está indisponível
-     */
-    public void publishAppointmentCancelledFallback(String appointmentId, String reason, Throwable throwable) {
-        logger.warn("Circuit Breaker ativo - Notification Service indisponível. Enviando cancelamento para DLQ. Erro: {}", 
-                   throwable.getMessage());
+    private void persistEventForManualRetry(final DomainEvent event, final Exception error) {
+        // TODO: Implementar persistência de eventos falhados para retry manual
+        // Pode ser uma tabela de outbox events ou um log estruturado
+        logger.error("Event persistence for manual retry not implemented yet. Event: {}", event);
         
-        try {
-            AppointmentCancelledMessageDto messageDto = new AppointmentCancelledMessageDto(
-                appointmentId,
-                null,
-                null,
-                null,
-                reason
-            );
-            
-            // Publica na Dead Letter Queue para retry posterior
-            rabbitTemplate.convertAndSend(APPOINTMENT_CANCELLED_DLQ, messageDto);
-            
-            logger.info("Evento de cancelamento enviado para DLQ com sucesso - será reprocessado automaticamente");
-            
-        } catch (Exception e) {
-            logger.error("CRÍTICO: Falha ao enviar evento de cancelamento para DLQ. Evento pode estar perdido: {}", e.getMessage(), e);
-        }
-    }
-    
-    @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishPatientRegisteredFallback")
-    public void publishPatientRegistered(String patientId, String patientName, String professionalId) {
-        try {
-            var message = String.format("Patient registered: ID=%s, Name=%s, Professional=%s", 
-                                       patientId, patientName, professionalId);
-            
-            logger.info("Publicando evento de cadastro de paciente: {}", patientId);
-            
-            rabbitTemplate.convertAndSend(PATIENT_REGISTERED_QUEUE, message);
-            
-            logger.info("Evento de cadastro de paciente publicado com sucesso");
-            
-        } catch (Exception e) {
-            logger.error("Erro ao publicar evento de cadastro de paciente: {}", e.getMessage(), e);
-            throw e; // Relança para ativar o Circuit Breaker
-        }
-    }
-    
-    /**
-     * Fallback method para cadastro de paciente - publica na DLQ quando Notification Service está indisponível
-     */
-    public void publishPatientRegisteredFallback(String patientId, String patientName, String professionalId, Throwable throwable) {
-        logger.warn("Circuit Breaker ativo - Notification Service indisponível. Enviando cadastro de paciente para DLQ. Erro: {}", 
-                   throwable.getMessage());
-        
-        try {
-            var message = String.format("Patient registered: ID=%s, Name=%s, Professional=%s", 
-                                       patientId, patientName, professionalId);
-            
-            // Publica na Dead Letter Queue para retry posterior
-            rabbitTemplate.convertAndSend(PATIENT_REGISTERED_DLQ, message);
-            
-            logger.info("Evento de cadastro de paciente enviado para DLQ com sucesso - será reprocessado automaticamente");
-            
-        } catch (Exception e) {
-            logger.error("CRÍTICO: Falha ao enviar evento de cadastro de paciente para DLQ. Evento pode estar perdido: {}", e.getMessage(), e);
-        }
+        // Por enquanto, vamos apenas logar o erro crítico
+        logger.error("ALERT: Event lost - Manual intervention required. Event: {} - Error: {}", 
+                    event, error.getMessage());
     }
 }
