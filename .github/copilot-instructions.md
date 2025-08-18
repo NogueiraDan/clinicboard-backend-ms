@@ -88,25 +88,26 @@ O sistema é composto por múltiplos microsserviços Spring Boot registrados via
 
 ---
 
-### Estrutura recomendada Spring Boot + DDD + Hexagonal
+### Estrutura esperada à seguir: Arquitetura Hexagonal + Domain-Driven Design
 ```
 src/
-├── domain/
-│   ├── model/
-│   ├── service/
-│   ├── event/
-│   └── repository/
+├── domain/ (Dominio puro do sistema, o coração do software)
+│   ├── model/ (Entidades, Agregados, Value Objects)
+│   ├── service/ (Serviços de dominio, exclusivos do Dominio, caso possua e seja necessário)
+│   ├── event/ (Domain Events caso possua ou seja necessário no dominio de negocio)
 ├── application/
-│   ├── usecase/
+│   ├── usecase/ (Casos de uso)
 │   └── port/
-│       ├── in/
-│       └── out/
+│       ├── in/ (Portas de entrada - Contrato que o caso de uso implementa)
+│       └── out/ (Portas de saída que o caso de uso chama: - Contrato implementado pelo adaptador de saída)
 ├── infrastructure/
 │   ├── adapter/
-│   │   ├── inbound/
-│   │   └── outbound/
-│   └── config/
+│   │   ├── in/ (Adaptadores de entrada que chamam as portas de entrada da camada de application)
+│   │   └── out/ (Adaptadores de saída que implementam as portas de saída da camada de application)
+│   └── config/ (Configurações específicas de infraestrutura)
 ```
+Imagem de referência da arquitetura hexagonal padrão
+![Arquitetura hexagonal](../hexagonal_arch.png)
 ---
 
 ## 🎯 Objetivo
