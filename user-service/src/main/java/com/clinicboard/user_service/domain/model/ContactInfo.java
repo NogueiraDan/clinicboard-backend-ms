@@ -17,10 +17,19 @@ public class ContactInfo {
             throw new BusinessException("Contato não pode ser nulo ou vazio");
         }
         
-        String cleanedValue = value.trim().replaceAll("[^0-9]", "");
-        
-        if (cleanedValue.length() < 10 || cleanedValue.length() > 11) {
+        String cleanedValue = value.trim().replaceAll("[^0-9+]", "");
+
+        // Permite formato internacional: +5583987654321
+        if (cleanedValue.startsWith("+")) {
+            if (!cleanedValue.matches("^\\+55\\d{11}$")) {
+            throw new BusinessException("Contato internacional deve estar no formato +5583987654321");
+            }
+        } else {
+            // Permite apenas números nacionais com 10 ou 11 dígitos
+            cleanedValue = cleanedValue.replaceAll("[^0-9]", "");
+            if (cleanedValue.length() < 10 || cleanedValue.length() > 11) {
             throw new BusinessException("Contato deve ter entre 10 e 11 dígitos");
+            }
         }
         
         this.value = cleanedValue;
