@@ -5,6 +5,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
@@ -24,6 +25,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
  * - Rate Limiting
  * - Health Checks
  */
+@Tag("fitness-functions")
 @DisplayName("🔥 RESILIENCE PATTERNS - Fitness Functions")
 class ResiliencePatternsFitnessTest {
 

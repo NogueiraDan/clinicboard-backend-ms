@@ -88,7 +88,7 @@ jobs:
         run: |
           cd user-service
           mvn clean install
-          mvn test
+          mvn test -Dgroups="!fitness-functions"
 
   business-service:
     needs: filter

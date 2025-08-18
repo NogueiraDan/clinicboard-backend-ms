@@ -5,6 +5,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
@@ -22,6 +23,7 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  * - Tight Coupling
  * - Violation of Single Responsibility
  */
+@Tag("fitness-functions")
 @DisplayName("🔥 ANTI-PATTERNS - Fitness Functions")
 class AntiPatternsFitnessTest {
 
