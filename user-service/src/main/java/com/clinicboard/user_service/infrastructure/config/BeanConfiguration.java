@@ -4,6 +4,7 @@ import com.clinicboard.user_service.application.port.out.AuthenticationServicePo
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
 import com.clinicboard.user_service.infrastructure.adapter.out.authentication.AuthenticationAdapter;
 import com.clinicboard.user_service.infrastructure.adapter.out.persistence.UserPersistenceAdapter;
+import com.clinicboard.user_service.infrastructure.security.TokenService;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

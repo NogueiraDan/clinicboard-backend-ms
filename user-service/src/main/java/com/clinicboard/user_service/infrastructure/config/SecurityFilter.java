@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
-
 import com.clinicboard.user_service.infrastructure.adapter.out.authentication.UserDetailsAdapter;
+import com.clinicboard.user_service.infrastructure.security.TokenService;
 import com.clinicboard.user_service.domain.model.UserId;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

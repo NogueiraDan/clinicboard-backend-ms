@@ -4,7 +4,7 @@ import com.clinicboard.user_service.application.port.out.AuthenticationServicePo
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
 import com.clinicboard.user_service.domain.model.Email;
 import com.clinicboard.user_service.domain.model.User;
-import com.clinicboard.user_service.infrastructure.config.TokenService;
+import com.clinicboard.user_service.infrastructure.security.TokenService;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
