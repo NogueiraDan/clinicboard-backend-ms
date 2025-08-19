@@ -1,7 +1,7 @@
 package com.clinicboard.user_service.application.usecase;
 
 import com.clinicboard.user_service.application.port.in.DeleteUserUseCase;
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.UserId;
 
@@ -13,18 +13,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeleteUserUseCaseImpl implements DeleteUserUseCase {
     
-    private final UserRepositoryPort userRepositoryPort;
-    
-    public DeleteUserUseCaseImpl(UserRepositoryPort userRepositoryPort) {
-        this.userRepositoryPort = userRepositoryPort;
-    }
-    
-    @Override
+    private final UserPersistencePort userPersistencePort;
+
+    public DeleteUserUseCaseImpl(UserPersistencePort userPersistencePort) {
+        this.userPersistencePort = userPersistencePort;
+    }    @Override
     public void deleteUser(UserId id) {
-        if (!userRepositoryPort.existsById(id)) {
+        if (!userPersistencePort.existsById(id)) {
             throw new BusinessException("Usuário não encontrado com o id: " + id.getValue());
         }
         
-        userRepositoryPort.deleteById(id);
+        userPersistencePort.deleteById(id);
     }
 }

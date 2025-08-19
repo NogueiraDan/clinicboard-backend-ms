@@ -1,7 +1,7 @@
 package com.clinicboard.user_service.application.usecase;
 
 import com.clinicboard.user_service.application.port.in.FindUserUseCase;
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.Email;
 import com.clinicboard.user_service.domain.model.User;
@@ -15,22 +15,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class FindUserUseCaseImpl implements FindUserUseCase {
     
-    private final UserRepositoryPort userRepositoryPort;
-    
-    public FindUserUseCaseImpl(UserRepositoryPort userRepositoryPort) {
-        this.userRepositoryPort = userRepositoryPort;
-    }
-    
-    @Override
+    private final UserPersistencePort userPersistencePort;
+
+    public FindUserUseCaseImpl(UserPersistencePort userPersistencePort) {
+        this.userPersistencePort = userPersistencePort;
+    }    @Override
     public User findById(UserId id) {
-        return userRepositoryPort.findById(id)
+        return userPersistencePort.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o id: " + id.getValue()));
     }
     
     @Override
     public User findByEmail(String emailValue) {
         Email email = new Email(emailValue);
-        return userRepositoryPort.findByEmail(email)
+        return userPersistencePort.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o email: " + emailValue));
     }
 }

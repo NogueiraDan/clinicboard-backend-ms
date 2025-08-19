@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.infrastructure.adapter.out.authentication.UserDetailsAdapter;
 import com.clinicboard.user_service.infrastructure.security.TokenService;
 import com.clinicboard.user_service.domain.model.UserId;
@@ -24,11 +24,11 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
-    private final UserRepositoryPort userRepositoryPort;
+    private final UserPersistencePort userPersistencePort;
     private final TokenService tokenService;
 
-    public SecurityFilter(UserRepositoryPort userRepositoryPort, TokenService tokenService) {
-        this.userRepositoryPort = userRepositoryPort;
+    public SecurityFilter(UserPersistencePort userPersistencePort, TokenService tokenService) {
+        this.userPersistencePort = userPersistencePort;
         this.tokenService = tokenService;
     }
 
@@ -40,7 +40,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         if (token != null) {
             var userId = tokenService.validateToken(token);
             if (!userId.isEmpty()) {
-                var userOptional = userRepositoryPort.findById(new UserId(userId));
+                var userOptional = userPersistencePort.findById(new UserId(userId));
                 if (userOptional.isPresent()) {
                     UserDetails user = new UserDetailsAdapter(userOptional.get());
                     var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());

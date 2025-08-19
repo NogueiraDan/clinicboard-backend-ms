@@ -1,6 +1,6 @@
 package com.clinicboard.user_service.infrastructure.adapter.out.persistence;
 
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.domain.model.Email;
 import com.clinicboard.user_service.domain.model.User;
 import com.clinicboard.user_service.domain.model.UserId;
@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Adaptador de persistência que implementa UserRepositoryPort.
+ * Adaptador de persistência que implementa UserPersistencePort.
  * Faz a ponte entre a aplicação e o banco de dados.
  */
 @Component
-public class UserPersistenceAdapter implements UserRepositoryPort {
+public class UserPersistenceAdapter implements UserPersistencePort {
     
     private final UserJpaRepository userJpaRepository;
     private final UserPersistenceMapper mapper;

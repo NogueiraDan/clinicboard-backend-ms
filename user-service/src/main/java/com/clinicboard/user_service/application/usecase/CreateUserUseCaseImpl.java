@@ -2,7 +2,7 @@ package com.clinicboard.user_service.application.usecase;
 
 import com.clinicboard.user_service.application.port.in.CreateUserUseCase;
 import com.clinicboard.user_service.application.port.out.PasswordEncoderPort;
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.*;
 import com.clinicboard.user_service.domain.service.PasswordPolicyDomainService;
@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class CreateUserUseCaseImpl implements CreateUserUseCase {
     
-    private final UserRepositoryPort userRepositoryPort;
+    private final UserPersistencePort userPersistencePort;
     private final PasswordEncoderPort passwordEncoderPort;
     private final PasswordPolicyDomainService passwordPolicyDomainService;
     
-    public CreateUserUseCaseImpl(UserRepositoryPort userRepositoryPort, 
+    public CreateUserUseCaseImpl(UserPersistencePort userPersistencePort, 
                                 PasswordEncoderPort passwordEncoderPort,
                                 PasswordPolicyDomainService passwordPolicyDomainService) {
-        this.userRepositoryPort = userRepositoryPort;
+        this.userPersistencePort = userPersistencePort;
         this.passwordEncoderPort = passwordEncoderPort;
         this.passwordPolicyDomainService = passwordPolicyDomainService;
     }
@@ -32,7 +32,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
     public User createUser(CreateUserCommand command) {
         // Validar se email já existe
         Email email = new Email(command.email());
-        if (userRepositoryPort.existsByEmail(email)) {
+        if (userPersistencePort.existsByEmail(email)) {
             throw new BusinessException("Email já cadastrado no sistema");
         }
         
@@ -51,7 +51,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
         User user = new User(command.name(), email, password, contact, role);
         
         // Persistir e retornar
-        return userRepositoryPort.save(user);
+        return userPersistencePort.save(user);
     }
     
     private UserRole parseUserRole(String roleString) {
