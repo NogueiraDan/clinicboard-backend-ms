@@ -38,12 +38,11 @@ public class UserPersistenceMapper {
         Password password = new Password(entity.getPassword());
         ContactInfo contact = new ContactInfo(entity.getContact());
         
-        User user = new User(entity.getName(), email, password, contact, entity.getRole());
-        
+        // Se tem ID, usa o construtor completo; senão, usa o construtor sem ID
         if (id != null) {
-            user.setId(id);
+            return new User(id, entity.getName(), email, password, contact, entity.getRole());
+        } else {
+            return new User(entity.getName(), email, password, contact, entity.getRole());
         }
-        
-        return user;
     }
 }

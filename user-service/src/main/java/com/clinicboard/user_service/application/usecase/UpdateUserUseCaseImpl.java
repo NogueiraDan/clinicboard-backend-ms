@@ -25,12 +25,12 @@ public class UpdateUserUseCaseImpl implements UpdateUserUseCase {
         User existingUser = userRepositoryPort.findById(command.id())
                 .orElseThrow(() -> new ApplicationException("Usuário não encontrado com o id: " + command.id().getValue()));
         
-        // Atualizar campos usando o método correto do domínio
-        existingUser.updateProfile(
+        // Atualizar campos usando o método correto do domínio (retorna nova instância)
+        User updatedUser = existingUser.updateProfile(
             command.name(),
             new ContactInfo(command.contact())
         );
         
-        return userRepositoryPort.save(existingUser);
+        return userRepositoryPort.save(updatedUser);
     }
 }
