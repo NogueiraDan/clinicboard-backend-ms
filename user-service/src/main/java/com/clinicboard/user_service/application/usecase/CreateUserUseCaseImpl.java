@@ -48,11 +48,11 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
     
     private UserRole parseUserRole(String roleString) {
         if (roleString == null) {
-            return UserRole.PROFESSIONAL; // Valor padrão
+            return UserRole.of(UserRole.RoleType.PROFESSIONAL); // Valor padrão
         }
         
         try {
-            return UserRole.valueOf(roleString.toUpperCase());
+            return UserRole.fromCode(roleString.toLowerCase());
         } catch (IllegalArgumentException e) {
             throw new BusinessException("Role inválida: " + roleString);
         }

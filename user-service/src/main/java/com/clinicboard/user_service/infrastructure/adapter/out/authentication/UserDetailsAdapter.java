@@ -1,7 +1,6 @@
 package com.clinicboard.user_service.infrastructure.adapter.out.authentication;
 
 import com.clinicboard.user_service.domain.model.User;
-import com.clinicboard.user_service.domain.model.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,7 +22,7 @@ public class UserDetailsAdapter implements UserDetails {
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (user.getRole() == UserRole.ADMIN) {
+        if (user.getRole().isAdmin()) {
             return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
         } else {
             return List.of(new SimpleGrantedAuthority("ROLE_PROFESSIONAL"));

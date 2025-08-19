@@ -1,36 +1,46 @@
 package com.clinicboard.user_service.domain.model;
 
-import java.util.Objects;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Value Object que representa um identificador único de usuário.
+ * Garante que o ID seja válido conforme as regras de negócio.
  */
-public class UserId {
+public record UserId(String value) {
     
-    private final String value;
+    private static final Pattern UUID_PATTERN = Pattern.compile(
+        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    );
     
-    public UserId(String value) {
-        if (value == null || value.trim().isEmpty()) {
+    public UserId {
+        validateId(value);
+    }
+    
+    private static void validateId(String id) {
+        if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("UserId não pode ser nulo ou vazio");
         }
-        this.value = value.trim();
+        
+        String trimmedId = id.trim();
+        
+        if (!UUID_PATTERN.matcher(trimmedId).matches()) {
+            throw new IllegalArgumentException("UserId deve estar no formato UUID válido");
+        }
     }
     
+    /**
+     * Gera um novo UserId único.
+     */
+    public static UserId generate() {
+        return new UserId(UUID.randomUUID().toString());
+    }
+    
+    /**
+     * Retorna o valor do ID trimmed.
+     */
     public String getValue() {
-        return value;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UserId userId = (UserId) o;
-        return Objects.equals(value, userId.value);
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
+        return value.trim();
     }
     
     @Override

@@ -11,7 +11,7 @@ import java.util.Objects;
 public class User {
     
     private final UserId id;
-    private final String name;
+    private final UserName name;
     private final Email email;
     private final Password password;
     private final ContactInfo contact;
@@ -21,7 +21,7 @@ public class User {
     public User(String name, Email email, Password password, ContactInfo contact, UserRole role) {
         this.validateName(name);
         this.id = null; // Será definido pela infraestrutura após persistência
-        this.name = name.trim();
+        this.name = new UserName(name);
         this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
         this.password = Objects.requireNonNull(password, "Password não pode ser nula");
         this.contact = Objects.requireNonNull(contact, "Contact não pode ser nulo");
@@ -32,7 +32,17 @@ public class User {
     public User(UserId id, String name, Email email, Password password, ContactInfo contact, UserRole role) {
         this.validateName(name);
         this.id = Objects.requireNonNull(id, "ID não pode ser nulo para usuário existente");
-        this.name = name.trim();
+        this.name = new UserName(name);
+        this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
+        this.password = Objects.requireNonNull(password, "Password não pode ser nula");
+        this.contact = Objects.requireNonNull(contact, "Contact não pode ser nulo");
+        this.role = Objects.requireNonNull(role, "Role não pode ser nula");
+    }
+    
+    // Construtor para usar diretamente UserName (novo)
+    public User(UserId id, UserName name, Email email, Password password, ContactInfo contact, UserRole role) {
+        this.id = id; // Pode ser null para novos usuários
+        this.name = Objects.requireNonNull(name, "Name não pode ser nulo");
         this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
         this.password = Objects.requireNonNull(password, "Password não pode ser nula");
         this.contact = Objects.requireNonNull(contact, "Contact não pode ser nulo");
@@ -42,7 +52,7 @@ public class User {
     // Construtor padrão para frameworks (JPA, etc.)
     protected User() {
         this.id = null;
-        this.name = "";
+        this.name = new UserName("Default");
         this.email = null;
         this.password = null;
         this.contact = null;
@@ -66,12 +76,8 @@ public class User {
      * Retorna uma nova instância com as informações atualizadas (imutabilidade)
      */
     public User updateProfile(String newName, ContactInfo newContact) {
-        String updatedName = (newName != null) ? newName.trim() : this.name;
+        UserName updatedName = (newName != null) ? new UserName(newName) : this.name;
         ContactInfo updatedContact = (newContact != null) ? newContact : this.contact;
-        
-        if (newName != null) {
-            validateName(newName);
-        }
         
         return new User(this.id, updatedName, this.email, this.password, updatedContact, this.role);
     }
@@ -114,6 +120,10 @@ public class User {
     }
     
     public String getName() {
+        return name.value();
+    }
+    
+    public UserName getDomainName() {
         return name;
     }
     
