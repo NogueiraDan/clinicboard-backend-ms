@@ -45,7 +45,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
         // Criptografar senha após validação
         String encryptedPassword = passwordEncoderPort.encode(command.password());
         Password password = Password.fromEncrypted(encryptedPassword);
-        ContactInfo contact = new ContactInfo(command.contact());
+        ContactDetails contact = new ContactDetails(command.contact());
         
         // Criar entidade User
         User user = new User(command.name(), email, password, contact, role);

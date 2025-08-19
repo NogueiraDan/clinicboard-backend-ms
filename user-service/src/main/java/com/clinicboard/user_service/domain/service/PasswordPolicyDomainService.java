@@ -2,7 +2,6 @@ package com.clinicboard.user_service.domain.service;
 
 import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.UserRole;
-import org.springframework.stereotype.Component;
 
 /**
  * Domain Service responsável por implementar regras complexas de política de senha.
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
  * 2. Coordena regras que podem envolver múltiplos conceitos do domínio
  * 3. Encapsula conhecimento sobre políticas de segurança do negócio
  */
-@Component
 public class PasswordPolicyDomainService {
     
     /**

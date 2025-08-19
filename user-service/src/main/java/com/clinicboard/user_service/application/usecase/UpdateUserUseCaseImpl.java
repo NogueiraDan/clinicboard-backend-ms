@@ -28,7 +28,7 @@ public class UpdateUserUseCaseImpl implements UpdateUserUseCase {
         // Atualizar campos usando o método correto do domínio (retorna nova instância)
         User updatedUser = existingUser.updateProfile(
             command.name(),
-            new ContactInfo(command.contact())
+            new ContactDetails(command.contact())
         );
         
         return userRepositoryPort.save(updatedUser);

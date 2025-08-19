@@ -36,7 +36,7 @@ public class UserPersistenceMapper {
         UserId id = entity.getId() != null ? new UserId(entity.getId()) : null;
         Email email = new Email(entity.getEmail());
         Password password = new Password(entity.getPassword());
-        ContactInfo contact = new ContactInfo(entity.getContact());
+        ContactDetails contact = new ContactDetails(entity.getContact());
         
         // Se tem ID, usa o construtor completo; senão, usa o construtor sem ID
         if (id != null) {

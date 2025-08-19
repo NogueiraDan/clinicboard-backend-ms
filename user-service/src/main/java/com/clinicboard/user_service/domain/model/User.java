@@ -14,11 +14,11 @@ public class User {
     private final UserName name;
     private final Email email;
     private final Password password;
-    private final ContactInfo contact;
+    private final ContactDetails contact;
     private final UserRole role;
     
     // Construtor para criação de novos usuários (sem ID)
-    public User(String name, Email email, Password password, ContactInfo contact, UserRole role) {
+    public User(String name, Email email, Password password, ContactDetails contact, UserRole role) {
         this.validateName(name);
         this.id = null; // Será definido pela infraestrutura após persistência
         this.name = new UserName(name);
@@ -29,7 +29,7 @@ public class User {
     }
     
     // Construtor para usuários existentes (com ID)
-    public User(UserId id, String name, Email email, Password password, ContactInfo contact, UserRole role) {
+    public User(UserId id, String name, Email email, Password password, ContactDetails contact, UserRole role) {
         this.validateName(name);
         this.id = Objects.requireNonNull(id, "ID não pode ser nulo para usuário existente");
         this.name = new UserName(name);
@@ -40,7 +40,7 @@ public class User {
     }
     
     // Construtor para usar diretamente UserName (novo)
-    public User(UserId id, UserName name, Email email, Password password, ContactInfo contact, UserRole role) {
+    public User(UserId id, UserName name, Email email, Password password, ContactDetails contact, UserRole role) {
         this.id = id; // Pode ser null para novos usuários
         this.name = Objects.requireNonNull(name, "Name não pode ser nulo");
         this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
@@ -75,9 +75,9 @@ public class User {
      * Método de negócio para alterar informações do usuário
      * Retorna uma nova instância com as informações atualizadas (imutabilidade)
      */
-    public User updateProfile(String newName, ContactInfo newContact) {
+    public User updateProfile(String newName, ContactDetails newContact) {
         UserName updatedName = (newName != null) ? new UserName(newName) : this.name;
-        ContactInfo updatedContact = (newContact != null) ? newContact : this.contact;
+        ContactDetails updatedContact = (newContact != null) ? newContact : this.contact;
         
         return new User(this.id, updatedName, this.email, this.password, updatedContact, this.role);
     }
@@ -135,7 +135,7 @@ public class User {
         return password;
     }
     
-    public ContactInfo getContact() {
+    public ContactDetails getContact() {
         return contact;
     }
     
