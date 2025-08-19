@@ -11,7 +11,7 @@ import java.util.Optional;
  * Porta de saída para persistência de usuários.
  * Define o contrato que os adaptadores de persistência devem implementar.
  */
-public interface UserRepositoryPort {
+public interface UserPersistencePort {
     
     /**
      * Salva um usuário no repositório

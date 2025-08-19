@@ -1,6 +1,6 @@
 package com.clinicboard.user_service.infrastructure.adapter.out.authentication;
 
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.domain.model.Email;
 import com.clinicboard.user_service.domain.model.User;
 
@@ -16,19 +16,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthorizationService implements UserDetailsService {
 
-    private final UserRepositoryPort userRepositoryPort;
+    private final UserPersistencePort userPersistencePort;
 
-    public AuthorizationService(UserRepositoryPort userRepositoryPort) {
-        this.userRepositoryPort = userRepositoryPort;
+    public AuthorizationService(UserPersistencePort userPersistencePort) {
+        this.userPersistencePort = userPersistencePort;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Email email = new Email(username);
-        User user = userRepositoryPort.findByEmail(email)
+        User user = userPersistencePort.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
         
-        // A entidade User do domínio implementa UserDetails
-        return user;
+        // O adapter da entidade User do domínio implementa UserDetails
+        return new UserDetailsAdapter(user);
     }
 }

@@ -1,6 +1,5 @@
 package com.clinicboard.user_service.infrastructure.adapter.in.web;
 
-import com.clinicboard.user_service.application.port.in.AuthenticateUserUseCase;
 import com.clinicboard.user_service.application.port.in.CreateUserUseCase;
 import com.clinicboard.user_service.application.port.in.UpdateUserUseCase;
 import com.clinicboard.user_service.domain.model.User;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Mapper para conversão entre DTOs da camada web e comandos/objetos de domínio.
+ * Responsável exclusivamente por operações de CRUD de usuários.
  */
 @Component
 public class UserWebMapper {
@@ -40,16 +40,6 @@ public class UserWebMapper {
     }
     
     /**
-     * Converte LoginRequestDto para AuthenticationCommand
-     */
-    public AuthenticateUserUseCase.AuthenticationCommand toAuthCommand(LoginRequestDto dto) {
-        return new AuthenticateUserUseCase.AuthenticationCommand(
-                dto.getEmail(),
-                dto.getPassword()
-        );
-    }
-    
-    /**
      * Converte User (domínio) para UserResponseDto
      */
     public UserResponseDto toUserResponseDto(User user) {
@@ -59,21 +49,6 @@ public class UserWebMapper {
                 user.getEmail().getValue(),
                 user.getContact().getValue(),
                 user.getRole()
-        );
-    }
-    
-    /**
-     * Converte AuthenticationResult para LoginResponseDto
-     */
-    public LoginResponseDto toLoginResponseDto(AuthenticateUserUseCase.AuthenticationResult result) {
-        User user = result.user();
-        return new LoginResponseDto(
-                user.getId().getValue(),
-                user.getName(),
-                user.getEmail().getValue(),
-                user.getContact().getValue(),
-                user.getRole(),
-                result.token()
         );
     }
 }

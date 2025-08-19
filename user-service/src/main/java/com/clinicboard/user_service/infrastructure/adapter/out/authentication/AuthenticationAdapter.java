@@ -1,10 +1,10 @@
 package com.clinicboard.user_service.infrastructure.adapter.out.authentication;
 
 import com.clinicboard.user_service.application.port.out.AuthenticationServicePort;
-import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+import com.clinicboard.user_service.application.port.out.UserPersistencePort;
 import com.clinicboard.user_service.domain.model.Email;
 import com.clinicboard.user_service.domain.model.User;
-import com.clinicboard.user_service.infrastructure.config.TokenService;
+import com.clinicboard.user_service.infrastructure.security.TokenService;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,15 +19,15 @@ public class AuthenticationAdapter implements AuthenticationServicePort {
     
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
-    private final UserRepositoryPort userRepositoryPort;
-    
+    private final UserPersistencePort userPersistencePort;
+
     public AuthenticationAdapter(
             AuthenticationManager authenticationManager,
             TokenService tokenService,
-            UserRepositoryPort userRepositoryPort) {
+            UserPersistencePort userPersistencePort) {
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
-        this.userRepositoryPort = userRepositoryPort;
+        this.userPersistencePort = userPersistencePort;
     }
     
     @Override
@@ -37,7 +37,7 @@ public class AuthenticationAdapter implements AuthenticationServicePort {
         
         // Retornar o usuário do domínio
         Email emailObj = new Email(email);
-        return userRepositoryPort.findByEmail(emailObj)
+        return userPersistencePort.findByEmail(emailObj)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado após autenticação"));
     }
     

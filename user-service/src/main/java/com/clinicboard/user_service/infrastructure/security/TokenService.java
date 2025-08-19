@@ -1,4 +1,4 @@
-package com.clinicboard.user_service.infrastructure.config;
+package com.clinicboard.user_service.infrastructure.security;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,7 +15,7 @@ import com.clinicboard.user_service.domain.model.User;
 
 /**
  * Serviço de infraestrutura para geração e validação de tokens JWT.
- * Movido para infrastructure pois é um detalhe de implementação.
+ * Movido para infrastructure.security para quebrar dependência cíclica.
  */
 @Service
 public class TokenService {

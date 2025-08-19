@@ -1,33 +1,27 @@
 package com.clinicboard.user_service.domain.model;
 
 import com.clinicboard.user_service.domain.exception.BusinessException;
-
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * Aggregate Root: User
  * Entidade rica que encapsula todas as regras de negócio relacionadas a usuários.
  * Implementa UserDetails para integração com Spring Security.
  */
-public class User implements UserDetails {
+public class User {
     
-    private UserId id;
-    private String name;
-    private Email email;
-    private Password password;
-    private ContactInfo contact;
-    private UserRole role;
+    private final UserId id;
+    private final UserName name;
+    private final Email email;
+    private final Password password;
+    private final ContactDetails contact;
+    private final UserRole role;
     
     // Construtor para criação de novos usuários (sem ID)
-    public User(String name, Email email, Password password, ContactInfo contact, UserRole role) {
+    public User(String name, Email email, Password password, ContactDetails contact, UserRole role) {
         this.validateName(name);
-        this.name = name;
+        this.id = null; // Será definido pela infraestrutura após persistência
+        this.name = new UserName(name);
         this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
         this.password = Objects.requireNonNull(password, "Password não pode ser nula");
         this.contact = Objects.requireNonNull(contact, "Contact não pode ser nulo");
@@ -35,13 +29,35 @@ public class User implements UserDetails {
     }
     
     // Construtor para usuários existentes (com ID)
-    public User(UserId id, String name, Email email, Password password, ContactInfo contact, UserRole role) {
-        this(name, email, password, contact, role);
+    public User(UserId id, String name, Email email, Password password, ContactDetails contact, UserRole role) {
+        this.validateName(name);
         this.id = Objects.requireNonNull(id, "ID não pode ser nulo para usuário existente");
+        this.name = new UserName(name);
+        this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
+        this.password = Objects.requireNonNull(password, "Password não pode ser nula");
+        this.contact = Objects.requireNonNull(contact, "Contact não pode ser nulo");
+        this.role = Objects.requireNonNull(role, "Role não pode ser nula");
+    }
+    
+    // Construtor para usar diretamente UserName (novo)
+    public User(UserId id, UserName name, Email email, Password password, ContactDetails contact, UserRole role) {
+        this.id = id; // Pode ser null para novos usuários
+        this.name = Objects.requireNonNull(name, "Name não pode ser nulo");
+        this.email = Objects.requireNonNull(email, "Email não pode ser nulo");
+        this.password = Objects.requireNonNull(password, "Password não pode ser nula");
+        this.contact = Objects.requireNonNull(contact, "Contact não pode ser nulo");
+        this.role = Objects.requireNonNull(role, "Role não pode ser nula");
     }
     
     // Construtor padrão para frameworks (JPA, etc.)
-    protected User() {}
+    protected User() {
+        this.id = null;
+        this.name = new UserName("Default");
+        this.email = null;
+        this.password = null;
+        this.contact = null;
+        this.role = null;
+    }
     
     private void validateName(String name) {
         if (name == null || name.trim().isEmpty()) {
@@ -57,22 +73,31 @@ public class User implements UserDetails {
     
     /**
      * Método de negócio para alterar informações do usuário
+     * Retorna uma nova instância com as informações atualizadas (imutabilidade)
      */
-    public void updateProfile(String newName, ContactInfo newContact) {
-        if (newName != null) {
-            validateName(newName);
-            this.name = newName.trim();
-        }
-        if (newContact != null) {
-            this.contact = newContact;
-        }
+    public User updateProfile(String newName, ContactDetails newContact) {
+        UserName updatedName = (newName != null) ? new UserName(newName) : this.name;
+        ContactDetails updatedContact = (newContact != null) ? newContact : this.contact;
+        
+        return new User(this.id, updatedName, this.email, this.password, updatedContact, this.role);
     }
     
     /**
      * Método de negócio para alteração de senha
+     * Retorna uma nova instância com a senha atualizada (imutabilidade)
      */
-    public void changePassword(Password newPassword) {
-        this.password = Objects.requireNonNull(newPassword, "Nova senha não pode ser nula");
+    public User changePassword(Password newPassword) {
+        Objects.requireNonNull(newPassword, "Nova senha não pode ser nula");
+        return new User(this.id, this.name, this.email, newPassword, this.contact, this.role);
+    }
+    
+    /**
+     * Método de negócio para definir o ID após persistência
+     * Retorna uma nova instância com o ID definido
+     */
+    public User withId(UserId newId) {
+        Objects.requireNonNull(newId, "ID não pode ser nulo");
+        return new User(newId, this.name, this.email, this.password, this.contact, this.role);
     }
     
     /**
@@ -95,6 +120,10 @@ public class User implements UserDetails {
     }
     
     public String getName() {
+        return name.value();
+    }
+    
+    public UserName getDomainName() {
         return name;
     }
     
@@ -106,37 +135,12 @@ public class User implements UserDetails {
         return password;
     }
     
-    public ContactInfo getContact() {
+    public ContactDetails getContact() {
         return contact;
     }
     
     public UserRole getRole() {
         return role;
-    }
-    
-    // Métodos para uso interno (principalmente frameworks)
-    public void setId(UserId id) {
-        this.id = id;
-    }
-    
-    // Implementação do UserDetails para Spring Security
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (this.role == UserRole.ADMIN) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else {
-            return List.of(new SimpleGrantedAuthority("ROLE_PROFESSIONAL"));
-        }
-    }
-    
-    @Override
-    public String getPassword() {
-        return password != null ? password.getValue() : null;
-    }
-    
-    @Override
-    public String getUsername() {
-        return email != null ? email.getValue() : null;
     }
     
     @Override

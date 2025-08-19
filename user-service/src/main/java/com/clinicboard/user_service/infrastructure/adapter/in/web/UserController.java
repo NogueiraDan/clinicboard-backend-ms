@@ -1,6 +1,7 @@
 package com.clinicboard.user_service.infrastructure.adapter.in.web;
 
 import com.clinicboard.user_service.application.port.in.*;
+import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.User;
 import com.clinicboard.user_service.domain.model.UserId;
 import com.clinicboard.user_service.infrastructure.adapter.in.web.dto.*;
@@ -24,6 +25,7 @@ public class UserController {
     private final ListUsersUseCase listUsersUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final DeleteUserUseCase deleteUserUseCase;
+    private final CreateUserUseCase createUserUseCase;
     private final UserWebMapper userWebMapper;
 
     public UserController(
@@ -31,11 +33,13 @@ public class UserController {
             ListUsersUseCase listUsersUseCase,
             UpdateUserUseCase updateUserUseCase,
             DeleteUserUseCase deleteUserUseCase,
+            CreateUserUseCase createUserUseCase,
             UserWebMapper userWebMapper) {
         this.findUserUseCase = findUserUseCase;
         this.listUsersUseCase = listUsersUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.deleteUserUseCase = deleteUserUseCase;
+        this.createUserUseCase = createUserUseCase;
         this.userWebMapper = userWebMapper;
     }
 
@@ -72,5 +76,22 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable String id) {
         deleteUserUseCase.deleteUser(new UserId(id));
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid CreateUserRequestDto createDto) {
+        // Verificar se email já existe
+        try {
+            findUserUseCase.findByEmail(createDto.getEmail());
+            throw new BusinessException("Email já cadastrado no sistema");
+        } catch (Exception e) {
+            // Email não existe, pode prosseguir
+        }
+
+        CreateUserUseCase.CreateUserCommand command = userWebMapper.toCreateCommand(createDto);
+        User savedUser = createUserUseCase.createUser(command);
+        UserResponseDto responseDto = userWebMapper.toUserResponseDto(savedUser);
+
+        return ResponseEntity.ok().body(responseDto);
     }
 }

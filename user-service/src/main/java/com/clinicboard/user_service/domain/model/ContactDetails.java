@@ -5,16 +5,16 @@ import com.clinicboard.user_service.domain.exception.BusinessException;
 import java.util.Objects;
 
 /**
- * Value Object que representa informações de contato.
- * Encapsula regras de validação específicas do domínio.
+ * Value Object que representa detalhes de contato de um usuário no contexto clínico.
+ * Encapsula regras de validação específicas do domínio de saúde.
  */
-public class ContactInfo {
+public class ContactDetails {
     
     private final String value;
     
-    public ContactInfo(String value) {
+    public ContactDetails(String value) {
         if (value == null || value.trim().isEmpty()) {
-            throw new BusinessException("Contato não pode ser nulo ou vazio");
+            throw new BusinessException("Detalhes de contato não podem ser nulos ou vazios");
         }
         
         String cleanedValue = value.trim().replaceAll("[^0-9+]", "");
@@ -57,7 +57,7 @@ public class ContactInfo {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ContactInfo that = (ContactInfo) o;
+        ContactDetails that = (ContactDetails) o;
         return Objects.equals(value, that.value);
     }
     
