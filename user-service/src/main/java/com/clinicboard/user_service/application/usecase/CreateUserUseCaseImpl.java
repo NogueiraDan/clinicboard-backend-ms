@@ -5,6 +5,7 @@ import com.clinicboard.user_service.application.port.out.PasswordEncoderPort;
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
 import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.*;
+import com.clinicboard.user_service.domain.service.PasswordPolicyDomainService;
 
 import org.springframework.stereotype.Service;
 
@@ -17,10 +18,14 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
     
     private final UserRepositoryPort userRepositoryPort;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final PasswordPolicyDomainService passwordPolicyDomainService;
     
-    public CreateUserUseCaseImpl(UserRepositoryPort userRepositoryPort, PasswordEncoderPort passwordEncoderPort) {
+    public CreateUserUseCaseImpl(UserRepositoryPort userRepositoryPort, 
+                                PasswordEncoderPort passwordEncoderPort,
+                                PasswordPolicyDomainService passwordPolicyDomainService) {
         this.userRepositoryPort = userRepositoryPort;
         this.passwordEncoderPort = passwordEncoderPort;
+        this.passwordPolicyDomainService = passwordPolicyDomainService;
     }
     
     @Override
@@ -31,13 +36,16 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
             throw new BusinessException("Email já cadastrado no sistema");
         }
         
-        // Criptografar senha
-        String encryptedPassword = passwordEncoderPort.encode(command.password());
-        
         // Criar objetos de valor
+        UserRole role = parseUserRole(command.role());
+        
+        // Validar política de senha usando Domain Service
+        passwordPolicyDomainService.validatePasswordPolicy(command.password(), role);
+        
+        // Criptografar senha após validação
+        String encryptedPassword = passwordEncoderPort.encode(command.password());
         Password password = Password.fromEncrypted(encryptedPassword);
         ContactInfo contact = new ContactInfo(command.contact());
-        UserRole role = parseUserRole(command.role());
         
         // Criar entidade User
         User user = new User(command.name(), email, password, contact, role);
