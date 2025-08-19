@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -118,8 +119,8 @@ class AntiPatternsFitnessTest {
     @DisplayName("🚨 ANTI-PATTERN: Controllers não devem depender de outros controllers")
     void controllersShouldNotDependOnOtherControllers() {
         ArchRule rule = noClasses()
-                .that().haveNameMatching(".*Controller")
-                .should().dependOnClassesThat().haveNameMatching(".*Controller")
+                .that().areAnnotatedWith(RestController.class)
+                .should().dependOnClassesThat().areAnnotatedWith(RestController.class)
                 .because("CONTROLLERS DEVEM SER INDEPENDENTES");
 
         rule.check(classes);
