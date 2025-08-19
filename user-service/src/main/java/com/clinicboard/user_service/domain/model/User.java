@@ -1,21 +1,14 @@
 package com.clinicboard.user_service.domain.model;
 
 import com.clinicboard.user_service.domain.exception.BusinessException;
-
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * Aggregate Root: User
  * Entidade rica que encapsula todas as regras de negócio relacionadas a usuários.
  * Implementa UserDetails para integração com Spring Security.
  */
-public class User implements UserDetails {
+public class User {
     
     private UserId id;
     private String name;
@@ -117,26 +110,6 @@ public class User implements UserDetails {
     // Métodos para uso interno (principalmente frameworks)
     public void setId(UserId id) {
         this.id = id;
-    }
-    
-    // Implementação do UserDetails para Spring Security
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (this.role == UserRole.ADMIN) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else {
-            return List.of(new SimpleGrantedAuthority("ROLE_PROFESSIONAL"));
-        }
-    }
-    
-    @Override
-    public String getPassword() {
-        return password != null ? password.getValue() : null;
-    }
-    
-    @Override
-    public String getUsername() {
-        return email != null ? email.getValue() : null;
     }
     
     @Override

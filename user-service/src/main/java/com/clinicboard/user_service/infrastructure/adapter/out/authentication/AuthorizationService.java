@@ -28,7 +28,7 @@ public class AuthorizationService implements UserDetailsService {
         User user = userRepositoryPort.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
         
-        // A entidade User do domínio implementa UserDetails
-        return user;
+        // O adapter da entidade User do domínio implementa UserDetails
+        return new UserDetailsAdapter(user);
     }
 }

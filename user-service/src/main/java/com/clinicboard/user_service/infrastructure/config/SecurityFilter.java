@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
+
+import com.clinicboard.user_service.infrastructure.adapter.out.authentication.UserDetailsAdapter;
 import com.clinicboard.user_service.domain.model.UserId;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -40,7 +42,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (!userId.isEmpty()) {
                 var userOptional = userRepositoryPort.findById(new UserId(userId));
                 if (userOptional.isPresent()) {
-                    UserDetails user = userOptional.get();
+                    UserDetails user = new UserDetailsAdapter(userOptional.get());
                     var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
