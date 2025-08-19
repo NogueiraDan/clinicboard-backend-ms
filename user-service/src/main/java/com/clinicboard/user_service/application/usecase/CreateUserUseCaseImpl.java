@@ -1,11 +1,11 @@
 package com.clinicboard.user_service.application.usecase;
 
 import com.clinicboard.user_service.application.port.in.CreateUserUseCase;
+import com.clinicboard.user_service.application.port.out.PasswordEncoderPort;
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
 import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.*;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 public class CreateUserUseCaseImpl implements CreateUserUseCase {
     
     private final UserRepositoryPort userRepositoryPort;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoderPort passwordEncoderPort;
     
-    public CreateUserUseCaseImpl(UserRepositoryPort userRepositoryPort) {
+    public CreateUserUseCaseImpl(UserRepositoryPort userRepositoryPort, PasswordEncoderPort passwordEncoderPort) {
         this.userRepositoryPort = userRepositoryPort;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoderPort = passwordEncoderPort;
     }
     
     @Override
@@ -32,7 +32,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
         }
         
         // Criptografar senha
-        String encryptedPassword = passwordEncoder.encode(command.password());
+        String encryptedPassword = passwordEncoderPort.encode(command.password());
         
         // Criar objetos de valor
         Password password = Password.fromEncrypted(encryptedPassword);

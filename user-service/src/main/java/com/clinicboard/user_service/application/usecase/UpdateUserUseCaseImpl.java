@@ -2,7 +2,7 @@ package com.clinicboard.user_service.application.usecase;
 
 import com.clinicboard.user_service.application.port.in.UpdateUserUseCase;
 import com.clinicboard.user_service.application.port.out.UserRepositoryPort;
-import com.clinicboard.user_service.application.exception.ApplicationException;
+import com.clinicboard.user_service.domain.exception.BusinessException;
 import com.clinicboard.user_service.domain.model.*;
 
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class UpdateUserUseCaseImpl implements UpdateUserUseCase {
     public User updateUser(UpdateUserCommand command) {
         // Buscar usuário existente
         User existingUser = userRepositoryPort.findById(command.id())
-                .orElseThrow(() -> new ApplicationException("Usuário não encontrado com o id: " + command.id().getValue()));
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado com o id: " + command.id().getValue()));
         
         // Atualizar campos usando o método correto do domínio (retorna nova instância)
         User updatedUser = existingUser.updateProfile(
