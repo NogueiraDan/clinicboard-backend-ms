@@ -171,9 +171,9 @@ class AntiPatternsFitnessTest {
     void domainShouldUseValueObjectsInsteadOfPrimitives() {
         ArchRule rule = noFields()
                 .that().areDeclaredInClassesThat().resideInAPackage("..domain.model..")
-                .and().areDeclaredInClassesThat().haveNameMatching(".*User.*") // Aggregate roots
+                .and().areDeclaredInClassesThat().haveSimpleName("User") // Apenas o Agregado User
                 .should().haveRawType(String.class)
-                .because("DOMAIN DEVE USAR VALUE OBJECTS - NÃO PRIMITIVOS");
+                .because("AGREGADOS DEVEM USAR VALUE OBJECTS - NÃO PRIMITIVOS");
 
         rule.check(classes);
     }
