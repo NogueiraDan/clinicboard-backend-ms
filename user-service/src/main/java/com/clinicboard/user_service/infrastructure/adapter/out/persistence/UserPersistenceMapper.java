@@ -24,7 +24,7 @@ public class UserPersistenceMapper {
         entity.setEmail(user.getEmail().getValue());
         entity.setPassword(user.getDomainPassword().getValue());
         entity.setContact(user.getContact().getValue());
-        entity.setRole(user.getRole());
+        entity.setRole(user.getRole().type()); // Extrai o enum do Value Object
         
         return entity;
     }
@@ -37,12 +37,13 @@ public class UserPersistenceMapper {
         Email email = new Email(entity.getEmail());
         Password password = new Password(entity.getPassword());
         ContactDetails contact = new ContactDetails(entity.getContact());
+        UserRole role = UserRole.of(entity.getRole()); // Reconstrói o Value Object a partir do enum
         
         // Se tem ID, usa o construtor completo; senão, usa o construtor sem ID
         if (id != null) {
-            return new User(id, entity.getName(), email, password, contact, entity.getRole());
+            return new User(id, entity.getName(), email, password, contact, role);
         } else {
-            return new User(entity.getName(), email, password, contact, entity.getRole());
+            return new User(entity.getName(), email, password, contact, role);
         }
     }
 }

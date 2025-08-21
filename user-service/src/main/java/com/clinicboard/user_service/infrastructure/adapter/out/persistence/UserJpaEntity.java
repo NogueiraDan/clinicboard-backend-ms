@@ -46,5 +46,5 @@ public class UserJpaEntity {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "perfil", nullable = false)
-    private UserRole role;
+    private UserRole.RoleType role;
 }
