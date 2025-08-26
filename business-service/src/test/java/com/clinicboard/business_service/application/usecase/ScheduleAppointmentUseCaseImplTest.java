@@ -20,10 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 
 /**
  * Testes unitários para ScheduleAppointmentUseCaseImpl
@@ -72,6 +74,7 @@ class ScheduleAppointmentUseCaseImplTest {
             Appointment appointment = createAppointment();
             
             when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(activePatient));
+            when(appointmentRepository.findByDateTimeRange(any(), any())).thenReturn(List.of()); // Mock para o Domain Service
             when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
             
             // When
@@ -94,6 +97,7 @@ class ScheduleAppointmentUseCaseImplTest {
             Appointment appointment = createAppointment();
             
             when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(activePatient));
+            when(appointmentRepository.findByDateTimeRange(any(), any())).thenReturn(List.of()); // Mock para o Domain Service
             when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
             
             // When & Then
@@ -129,6 +133,12 @@ class ScheduleAppointmentUseCaseImplTest {
             Patient inactivePatient = createInactivePatient();
             
             when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(inactivePatient));
+            when(appointmentRepository.findByDateTimeRange(any(), any())).thenReturn(List.of()); // Mock para o Domain Service
+            
+            // Mock do Domain Service para lançar a exceção esperada diretamente
+            doThrow(new PatientBusinessRuleException(inactivePatient.getId().value(), "Paciente inativo não pode agendar consultas"))
+                .when(availabilityDomainService)
+                .validateAppointmentCreation(any(), any(), any(), any(), any(), any());
             
             // When & Then
             assertThrows(PatientBusinessRuleException.class, 
@@ -236,6 +246,7 @@ class ScheduleAppointmentUseCaseImplTest {
             LocalDateTime.now().minusDays(30),
             LocalDateTime.now().minusDays(30)
         );
+        // IMPORTANTE: deactivate() retorna uma nova instância
         return patient.deactivate("Teste de inativação");
     }
 

@@ -10,10 +10,12 @@ import com.clinicboard.business_service.domain.event.AppointmentScheduledEvent;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.exception.AppointmentConflictException;
+import com.clinicboard.business_service.domain.exception.InvalidTimeSlotException;
 import com.clinicboard.business_service.domain.service.AvailabilityDomainService;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.List;
 
 /**
  * Implementação do caso de uso de agendamento de consultas.
@@ -56,21 +58,30 @@ public class ScheduleAppointmentUseCaseImpl implements ScheduleAppointmentComman
             Patient patient = patientRepository.findById(request.patientId())
                     .orElseThrow(() -> new PatientBusinessRuleException("Patient not found with ID: " + request.patientId().value()));
 
-            // 2. Criar o agendamento usando o construtor do agregado
+            // 2. Buscar agendamentos existentes para validação de regras de negócio
+            List<Appointment> existingAppointments = appointmentRepository
+                    .findByDateTimeRange(
+                            request.appointmentTime().value().minusHours(12),
+                            request.appointmentTime().value().plusHours(12)
+                    );
+
+            // 3. Validar regras de negócio através do Domain Service
+            availabilityDomainService.validateAppointmentCreation(
+                    request.patientId(),
+                    request.professionalId(),
+                    request.appointmentTime(),
+                    request.appointmentType(),
+                    existingAppointments,
+                    patient
+            );
+
+            // 4. Criar o agendamento usando o construtor do agregado
             Appointment appointment = new Appointment(
                     request.patientId(),
                     request.professionalId(),
                     request.appointmentTime(),
                     request.appointmentType()
             );
-
-            // 3. Verificar conflitos de horário
-            validateNoConflicts(appointment);
-
-            // 4. Verificar se o paciente está ativo
-            if (!patient.isActive()) {
-                throw new PatientBusinessRuleException("Cannot schedule appointment for inactive patient");
-            }
 
             // 5. Persistir o agendamento
             Appointment savedAppointment = appointmentRepository.save(appointment);
@@ -95,8 +106,8 @@ public class ScheduleAppointmentUseCaseImpl implements ScheduleAppointmentComman
                     request.observations()
             );
 
-        } catch (PatientBusinessRuleException | AppointmentConflictException e) {
-            // Re-lançar exceções de domínio
+        } catch (PatientBusinessRuleException | AppointmentConflictException | InvalidTimeSlotException e) {
+            // Re-lançar exceções de domínio sem modificar
             throw e;
         } catch (Exception e) {
             // Encapsular outras exceções
@@ -106,28 +117,6 @@ public class ScheduleAppointmentUseCaseImpl implements ScheduleAppointmentComman
                     return "SCHEDULE_APPOINTMENT_FAILED";
                 }
             };
-        }
-    }
-
-    /**
-     * Valida se não há conflitos de horário para o agendamento.
-     * 
-     * @param appointment agendamento a ser validado
-     * @throws AppointmentConflictException se houver conflito
-     */
-    private void validateNoConflicts(Appointment appointment) {
-        boolean hasConflict = appointmentRepository
-                .findByDateTimeRange(
-                        appointment.getScheduledTime().value().minusMinutes(59),
-                        appointment.getScheduledTime().value().plusMinutes(59)
-                )
-                .stream()
-                .anyMatch(existing -> existing.conflictsWith(appointment));
-
-        if (hasConflict) {
-            throw new AppointmentConflictException(
-                    "Time conflict detected for appointment at " + appointment.getScheduledTime().value()
-            );
         }
     }
 }
