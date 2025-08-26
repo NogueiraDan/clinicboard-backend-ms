@@ -3,6 +3,7 @@ package com.clinicboard.business_service.application.usecase;
 import com.clinicboard.business_service.application.port.in.FindAppointmentQuery;
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
 import com.clinicboard.business_service.domain.model.*;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  * - Foco em consultas sem efeitos colaterais
  * - Uso de linguagem ubíqua
  */
+@Component
 public class FindAppointmentUseCaseImpl implements FindAppointmentQuery {
 
     private final AppointmentRepository appointmentRepository;

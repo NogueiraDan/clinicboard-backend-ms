@@ -1,4 +1,5 @@
 package com.clinicboard.business_service.infrastructure.adapter.out.persistence;
+import lombok.extern.slf4j.Slf4j;
 
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
 import com.clinicboard.business_service.domain.model.Appointment;

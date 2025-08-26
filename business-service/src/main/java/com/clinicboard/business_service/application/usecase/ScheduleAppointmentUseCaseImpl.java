@@ -3,13 +3,14 @@ package com.clinicboard.business_service.application.usecase;
 import com.clinicboard.business_service.application.port.in.ScheduleAppointmentCommand;
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
-import com.clinicboard.business_service.application.port.out.EventPublisher;
+import com.clinicboard.business_service.application.port.out.EventPublisherGateway;
 import com.clinicboard.business_service.domain.model.Appointment;
 import com.clinicboard.business_service.domain.model.Patient;
 import com.clinicboard.business_service.domain.event.AppointmentScheduledEvent;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.exception.AppointmentConflictException;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
@@ -25,19 +26,20 @@ import java.util.Objects;
  * - Publicação de eventos de domínio
  * - Validação de regras de negócio
  */
+@Component
 public class ScheduleAppointmentUseCaseImpl implements ScheduleAppointmentCommand {
 
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
-    private final EventPublisher eventPublisher;
+    private final EventPublisherGateway eventPublisher;
 
     public ScheduleAppointmentUseCaseImpl(
             AppointmentRepository appointmentRepository,
             PatientRepository patientRepository,
-            EventPublisher eventPublisher) {
+            EventPublisherGateway eventPublisher) {
         this.appointmentRepository = Objects.requireNonNull(appointmentRepository, "AppointmentRepository cannot be null");
         this.patientRepository = Objects.requireNonNull(patientRepository, "PatientRepository cannot be null");
-        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisher cannot be null");
+        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherGateway cannot be null");
     }
 
     @Override

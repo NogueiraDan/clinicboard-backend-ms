@@ -4,7 +4,7 @@ import com.clinicboard.business_service.application.port.in.ScheduleAppointmentC
 import com.clinicboard.business_service.application.port.in.ScheduleAppointmentCommand.ScheduleAppointmentRequest;
 import com.clinicboard.business_service.application.port.in.ScheduleAppointmentCommand.ScheduleAppointmentResponse;
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
-import com.clinicboard.business_service.application.port.out.EventPublisher;
+import com.clinicboard.business_service.application.port.out.EventPublisherGateway;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.model.*;
@@ -41,7 +41,7 @@ class ScheduleAppointmentUseCaseImplTest {
     private PatientRepository patientRepository;
     
     @Mock
-    private EventPublisher eventPublisher;
+    private EventPublisherGateway eventPublisher;
     
     private ScheduleAppointmentCommand scheduleAppointmentUseCase;
 

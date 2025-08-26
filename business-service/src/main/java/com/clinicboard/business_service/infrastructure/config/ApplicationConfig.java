@@ -2,7 +2,7 @@ package com.clinicboard.business_service.infrastructure.config;
 
 import com.clinicboard.business_service.application.port.in.*;
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
-import com.clinicboard.business_service.application.port.out.EventPublisher;
+import com.clinicboard.business_service.application.port.out.EventPublisherGateway;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.application.usecase.*;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +40,7 @@ public class ApplicationConfig {
     public ScheduleAppointmentCommand scheduleAppointmentCommand(
             AppointmentRepository appointmentRepository,
             PatientRepository patientRepository,
-            EventPublisher eventPublisher) {
+            EventPublisherGateway eventPublisher) {
         return new ScheduleAppointmentUseCaseImpl(appointmentRepository, patientRepository, eventPublisher);
     }
 
@@ -50,7 +50,7 @@ public class ApplicationConfig {
     @Bean
     public CancelAppointmentCommand cancelAppointmentCommand(
             AppointmentRepository appointmentRepository,
-            EventPublisher eventPublisher) {
+            EventPublisherGateway eventPublisher) {
         return new CancelAppointmentUseCaseImpl(appointmentRepository, eventPublisher);
     }
 

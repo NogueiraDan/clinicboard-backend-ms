@@ -2,10 +2,11 @@ package com.clinicboard.business_service.application.usecase;
 
 import com.clinicboard.business_service.application.port.in.CancelAppointmentCommand;
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
-import com.clinicboard.business_service.application.port.out.EventPublisher;
+import com.clinicboard.business_service.application.port.out.EventPublisherGateway;
 import com.clinicboard.business_service.domain.model.Appointment;
-import com.clinicboard.business_service.domain.event.AppointmentCancelledEvent;
+import com.clinicboard.business_service.domain.event.AppointmentCanceledEvent;
 import com.clinicboard.business_service.domain.exception.DomainException;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
@@ -21,16 +22,17 @@ import java.util.Objects;
  * - Publicação de eventos de domínio
  * - Validação de regras de negócio
  */
+@Component
 public class CancelAppointmentUseCaseImpl implements CancelAppointmentCommand {
 
     private final AppointmentRepository appointmentRepository;
-    private final EventPublisher eventPublisher;
+    private final EventPublisherGateway eventPublisher;
 
     public CancelAppointmentUseCaseImpl(
             AppointmentRepository appointmentRepository,
-            EventPublisher eventPublisher) {
+            EventPublisherGateway eventPublisher) {
         this.appointmentRepository = Objects.requireNonNull(appointmentRepository, "AppointmentRepository cannot be null");
-        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisher cannot be null");
+        this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherGateway cannot be null");
     }
 
     @Override
@@ -56,8 +58,8 @@ public class CancelAppointmentUseCaseImpl implements CancelAppointmentCommand {
 
             // 4. Publicar eventos de domínio criados pelo agregado
             savedAppointment.getDomainEvents().forEach(event -> {
-                if (event instanceof AppointmentCancelledEvent cancelledEvent) {
-                    eventPublisher.publishAppointmentCancelled(cancelledEvent);
+                if (event instanceof AppointmentCanceledEvent cancelledEvent) {
+                    eventPublisher.publishAppointmentCanceled(cancelledEvent);
                 }
             });
 

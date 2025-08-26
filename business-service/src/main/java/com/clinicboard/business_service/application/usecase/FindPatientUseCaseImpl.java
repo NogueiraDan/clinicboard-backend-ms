@@ -3,6 +3,7 @@ package com.clinicboard.business_service.application.usecase;
 import com.clinicboard.business_service.application.port.in.FindPatientQuery;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.domain.model.*;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  * - Foco em consultas sem efeitos colaterais
  * - Uso de linguagem ubíqua
  */
+@Component
 public class FindPatientUseCaseImpl implements FindPatientQuery {
 
     private final PatientRepository patientRepository;

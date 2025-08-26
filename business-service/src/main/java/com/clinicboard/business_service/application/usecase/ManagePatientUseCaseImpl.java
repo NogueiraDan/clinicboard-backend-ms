@@ -6,6 +6,7 @@ import com.clinicboard.business_service.domain.model.Patient;
 import com.clinicboard.business_service.domain.model.ProfessionalId;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
@@ -20,6 +21,7 @@ import java.util.Objects;
  * - Delegação da lógica de negócio para agregados
  * - Validação de regras de negócio
  */
+@Component
 public class ManagePatientUseCaseImpl implements ManagePatientCommand {
 
     private final PatientRepository patientRepository;

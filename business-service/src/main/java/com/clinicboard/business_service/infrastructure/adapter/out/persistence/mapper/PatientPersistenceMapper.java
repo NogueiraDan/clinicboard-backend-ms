@@ -1,9 +1,9 @@
 package com.clinicboard.business_service.infrastructure.adapter.out.persistence.mapper;
 
-import com.clinicboard.business_service.domain.model.Patient;
 import com.clinicboard.business_service.domain.model.PatientId;
 import com.clinicboard.business_service.domain.model.PatientName;
 import com.clinicboard.business_service.domain.model.Email;
+import com.clinicboard.business_service.domain.model.Patient;
 import com.clinicboard.business_service.domain.model.ContactDetails;
 import com.clinicboard.business_service.domain.model.ProfessionalId;
 import com.clinicboard.business_service.domain.model.PatientStatus;
