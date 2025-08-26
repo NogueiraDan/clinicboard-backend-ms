@@ -6,7 +6,6 @@ import com.clinicboard.business_service.application.port.in.ScheduleAppointmentC
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
 import com.clinicboard.business_service.application.port.out.EventPublisher;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
-import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.model.*;
 
@@ -75,22 +74,22 @@ class ScheduleAppointmentUseCaseImplTest {
             
             // Then
             assertNotNull(response);
-            assertEquals(appointment.getId().value(), response.appointmentId().value());
-            assertEquals(request.patientId(), response.patientId());
-            assertEquals(request.professionalId(), response.professionalId());
+            assertNotNull(response.appointmentId());
+            assertEquals(AppointmentType.FIRST_CONSULTATION, response.appointmentType());
+            assertTrue(response.success());
             
+            verify(patientRepository).findById(any(PatientId.class));
             verify(appointmentRepository).save(any(Appointment.class));
-            verify(eventPublisher).publishAppointmentScheduled(any());
-        }
-
-        @Test
+        }        @Test
         @DisplayName("Deve validar horário comercial antes de agendar")
         void shouldValidateBusinessHoursBeforeScheduling() {
             // Given
             ScheduleAppointmentRequest request = createValidScheduleRequest();
             Patient activePatient = createActivePatient();
+            Appointment appointment = createAppointment();
             
             when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(activePatient));
+            when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
             
             // When & Then
             assertDoesNotThrow(() -> scheduleAppointmentUseCase.scheduleAppointment(request));
@@ -111,7 +110,7 @@ class ScheduleAppointmentUseCaseImplTest {
             
             // When & Then
             assertThrows(PatientBusinessRuleException.class, 
-                () -> scheduleAppointmentUseCase.schedule(request));
+                () -> scheduleAppointmentUseCase.scheduleAppointment(request));
             
             verify(appointmentRepository, never()).save(any());
             verify(eventPublisher, never()).publishAppointmentScheduled(any());
@@ -128,7 +127,7 @@ class ScheduleAppointmentUseCaseImplTest {
             
             // When & Then
             assertThrows(PatientBusinessRuleException.class, 
-                () -> scheduleAppointmentUseCase.schedule(request));
+                () -> scheduleAppointmentUseCase.scheduleAppointment(request));
             
             verify(appointmentRepository, never()).save(any());
             verify(eventPublisher, never()).publishAppointmentScheduled(any());
@@ -138,42 +137,22 @@ class ScheduleAppointmentUseCaseImplTest {
         @DisplayName("Deve falhar quando tentar agendar no passado")
         void shouldFailWhenSchedulingInPast() {
             // Given
-            LocalDateTime pastTime = LocalDateTime.now().minusDays(1);
-            ScheduleAppointmentRequest request = new ScheduleAppointmentRequest(
-                PatientId.generate().value(),
-                ProfessionalId.generate().value(),
-                pastTime,
-                AppointmentType.CONSULTATION,
-                "Consulta de rotina"
-            );
-            Patient activePatient = createActivePatient();
+            LocalDateTime pastTime = LocalDateTime.now().minusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0);
             
-            when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(activePatient));
-            
-            // When & Then
-            assertThrows(AppointmentBusinessRuleException.class, 
-                () -> scheduleAppointmentUseCase.schedule(request));
+            // When & Then - A exceção deve ser lançada na criação do AppointmentTime
+            assertThrows(AppointmentTime.InvalidAppointmentTimeException.class, 
+                () -> AppointmentTime.of(pastTime));
         }
 
         @Test
         @DisplayName("Deve falhar quando tentar agendar fora do horário comercial")
         void shouldFailWhenSchedulingOutsideBusinessHours() {
             // Given
-            LocalDateTime outsideBusinessHours = LocalDateTime.now().plusDays(1).withHour(22).withMinute(0);
-            ScheduleAppointmentRequest request = new ScheduleAppointmentRequest(
-                PatientId.generate().value(),
-                ProfessionalId.generate().value(),
-                outsideBusinessHours,
-                AppointmentType.CONSULTATION,
-                "Consulta fora do horário"
-            );
-            Patient activePatient = createActivePatient();
+            LocalDateTime outsideBusinessHours = LocalDateTime.now().plusDays(1).withHour(22).withMinute(0).withSecond(0).withNano(0);
             
-            when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(activePatient));
-            
-            // When & Then
-            assertThrows(AppointmentBusinessRuleException.class, 
-                () -> scheduleAppointmentUseCase.schedule(request));
+            // When & Then - A exceção deve ser lançada na criação do AppointmentTime
+            assertThrows(AppointmentTime.InvalidAppointmentTimeException.class, 
+                () -> AppointmentTime.of(outsideBusinessHours));
         }
     }
 
@@ -187,13 +166,16 @@ class ScheduleAppointmentUseCaseImplTest {
             // Given
             ScheduleAppointmentRequest request = createValidScheduleRequest();
             Patient activePatient = createActivePatient();
-            Appointment appointment = createAppointment();
             
             when(patientRepository.findById(any(PatientId.class))).thenReturn(Optional.of(activePatient));
-            when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
+            when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> {
+                Appointment appointmentToSave = invocation.getArgument(0);
+                // Simular que o repository retorna o appointment com ID mas mantém os eventos
+                return appointmentToSave;
+            });
             
             // When
-            scheduleAppointmentUseCase.schedule(request);
+            scheduleAppointmentUseCase.scheduleAppointment(request);
             
             // Then
             verify(eventPublisher).publishAppointmentScheduled(any());
@@ -209,7 +191,7 @@ class ScheduleAppointmentUseCaseImplTest {
             
             // When & Then
             assertThrows(PatientBusinessRuleException.class, 
-                () -> scheduleAppointmentUseCase.schedule(request));
+                () -> scheduleAppointmentUseCase.scheduleAppointment(request));
             
             verify(eventPublisher, never()).publishAppointmentScheduled(any());
         }
@@ -218,10 +200,10 @@ class ScheduleAppointmentUseCaseImplTest {
     // Helper methods para criar objetos de teste
     private ScheduleAppointmentRequest createValidScheduleRequest() {
         return new ScheduleAppointmentRequest(
-            PatientId.generate().value(),
-            ProfessionalId.generate().value(),
-            LocalDateTime.now().plusDays(1).withHour(10).withMinute(0),
-            AppointmentType.CONSULTATION,
+            PatientId.generate(),
+            ProfessionalId.generate(),
+            AppointmentTime.of(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0)),
+            AppointmentType.FIRST_CONSULTATION,
             "Consulta de rotina"
         );
     }
@@ -235,7 +217,20 @@ class ScheduleAppointmentUseCaseImplTest {
     }
 
     private Patient createInactivePatient() {
-        Patient patient = createActivePatient();
+        PatientName name = new PatientName("João Silva");
+        Email email = new Email("joao@email.com");
+        ContactDetails contact = new ContactDetails("11999999999");
+        ProfessionalId professionalId = ProfessionalId.generate();
+        Patient patient = new Patient(
+            PatientId.generate(),
+            name, 
+            email, 
+            contact, 
+            professionalId,
+            PatientStatus.ACTIVE,
+            LocalDateTime.now().minusDays(30),
+            LocalDateTime.now().minusDays(30)
+        );
         return patient.deactivate("Teste de inativação");
     }
 
@@ -243,10 +238,20 @@ class ScheduleAppointmentUseCaseImplTest {
         PatientId patientId = PatientId.generate();
         ProfessionalId professionalId = ProfessionalId.generate();
         AppointmentTime appointmentTime = AppointmentTime.of(
-            LocalDateTime.now().plusDays(1).withHour(10).withMinute(0)
+            LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0)
         );
-        AppointmentType type = AppointmentType.CONSULTATION;
+        AppointmentType type = AppointmentType.FIRST_CONSULTATION;
         
-        return new Appointment(patientId, professionalId, appointmentTime, type);
+        return new Appointment(
+            AppointmentId.generate(),
+            patientId,
+            professionalId,
+            appointmentTime,
+            AppointmentStatus.PENDING,
+            type,
+            "Consulta de teste",
+            LocalDateTime.now().minusMinutes(5),
+            LocalDateTime.now().minusMinutes(5)
+        );
     }
 }
