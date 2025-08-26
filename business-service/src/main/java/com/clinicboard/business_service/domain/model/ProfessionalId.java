@@ -28,11 +28,11 @@ public record ProfessionalId(String value) {
             throw new InvalidProfessionalIdException("ID do profissional não pode ser vazio");
         }
         
-        if (!UUID_PATTERN.matcher(value).matches()) {
-            throw new InvalidProfessionalIdException(
-                "ID do profissional deve estar no formato UUID válido: " + value
-            );
-        }
+        // if (!UUID_PATTERN.matcher(value).matches()) {
+        //     throw new InvalidProfessionalIdException(
+        //         "ID do profissional deve estar no formato UUID válido: " + value
+        //     );
+        // }
     }
 
     /**
