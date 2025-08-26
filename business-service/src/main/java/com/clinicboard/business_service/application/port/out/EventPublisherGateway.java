@@ -3,6 +3,7 @@ package com.clinicboard.business_service.application.port.out;
 import com.clinicboard.business_service.domain.event.AppointmentScheduledEvent;
 import com.clinicboard.business_service.domain.event.AppointmentCanceledEvent;
 import com.clinicboard.business_service.domain.event.AppointmentStatusChangedEvent;
+import com.clinicboard.business_service.domain.event.AppointmentRescheduledEvent;
 
 /**
  * Gateway para publicação de eventos de negócio.
@@ -39,4 +40,11 @@ public interface EventPublisherGateway {
      * @param event o evento de mudança de status
      */
     void publishAppointmentStatusChanged(AppointmentStatusChangedEvent event);
+    
+    /**
+     * Publica um evento de reagendamento de consulta.
+     * 
+     * @param event o evento de reagendamento
+     */
+    void publishAppointmentRescheduled(AppointmentRescheduledEvent event);
 }
