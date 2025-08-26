@@ -11,47 +11,49 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
 public class RabbitMQConfig {
 
-    @Value("${broker.queue.notification.name}")
-    private String queueName;
+    @Value("${app.messaging.exchange.events:clinicboard.events}")
+    private String eventsExchange;
 
-    @Value("${broker.queue.notification.dlq.name}")
-    private String dlqName;
+    @Value("${app.messaging.dlq.exchange:clinicboard.dlq}")
+    private String dlqExchange;
 
-    @Value("${broker.exchange.name}")
-    private String exchangeName;
+    @Value("${app.messaging.dlq.routing-key:events.failed}")
+    private String dlqRoutingKey;
 
+    /**
+     * Exchange principal para eventos de domínio
+     */
     @Bean
-    Queue queue() {
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("x-dead-letter-exchange", exchangeName);
-        args.put("x-dead-letter-routing-key", dlqName);
-        return new Queue(queueName, true, false, false, args);
+    TopicExchange eventsExchange() {
+        return new TopicExchange(eventsExchange);
     }
 
+    /**
+     * Exchange para Dead Letter Queue (DLQ)
+     */
+    @Bean
+    TopicExchange dlqExchange() {
+        return new TopicExchange(dlqExchange);
+    }
+
+    /**
+     * Fila para Dead Letter Queue
+     */
     @Bean
     Queue deadLetterQueue() {
-        return new Queue(dlqName, true);
+        return new Queue(dlqRoutingKey, true);
     }
 
+    /**
+     * Binding da DLQ com o exchange DLQ
+     */
     @Bean
-    TopicExchange exchange() {
-        return new TopicExchange(exchangeName);
-    }
-
-    @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(queueName);
-    }
-
-    @Bean
-    Binding dlqBinding(Queue deadLetterQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(deadLetterQueue).to(exchange).with(dlqName);
+    Binding dlqBinding(Queue deadLetterQueue, TopicExchange dlqExchange) {
+        return BindingBuilder.bind(deadLetterQueue).to(dlqExchange).with(dlqRoutingKey);
     }
 
     @Bean
