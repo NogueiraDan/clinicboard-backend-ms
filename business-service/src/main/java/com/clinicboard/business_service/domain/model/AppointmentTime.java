@@ -1,6 +1,6 @@
 package com.clinicboard.business_service.domain.model;
 
-import com.clinicboard.business_service.domain.exception.InvalidTimeSlotException;
+import com.clinicboard.business_service.domain.exception.DomainException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -10,15 +10,15 @@ import java.time.temporal.ChronoUnit;
  * Value Object que representa um horário de agendamento com suas regras de negócio.
  * 
  * Encapsula validações temporais específicas do domínio clínico:
- * - Horário comercial (8h às 19h)
+ * - Horário comercial (8h às 18h)
  * - Não pode ser no passado
- * - Intervalos mínimos entre consultas
+ * - Intervalos de 15 minutos
+ * - Máximo de 1 ano no futuro
  */
 public record AppointmentTime(LocalDateTime value) {
     
     private static final LocalTime BUSINESS_START = LocalTime.of(8, 0);
-    private static final LocalTime BUSINESS_END = LocalTime.of(19, 0);
-    private static final int MINIMUM_ADVANCE_HOURS = 2;
+    private static final LocalTime BUSINESS_END = LocalTime.of(18, 0);
 
     public AppointmentTime {
         validateAppointmentTime(value);
@@ -26,31 +26,31 @@ public record AppointmentTime(LocalDateTime value) {
 
     private static void validateAppointmentTime(LocalDateTime value) {
         if (value == null) {
-            throw new InvalidTimeSlotException("null", "Horário do agendamento não pode ser nulo");
+            throw new InvalidAppointmentTimeException("Horário do agendamento não pode ser nulo ou vazio");
         }
 
-        // Não pode ser no passado
-        if (value.isBefore(LocalDateTime.now().plusHours(MINIMUM_ADVANCE_HOURS))) {
-            throw new InvalidTimeSlotException(
-                value.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
-                "Agendamento deve ser feito com pelo menos 2 horas de antecedência"
-            );
+        // Não pode ser no passado ou muito próximo do presente
+        if (value.isBefore(LocalDateTime.now()) || value.isEqual(LocalDateTime.now())) {
+            throw new InvalidAppointmentTimeException("Agendamento deve ser no futuro");
+        }
+
+        // Não pode ser muito distante no futuro (máximo 1 ano)
+        if (value.isAfter(LocalDateTime.now().plusYears(1))) {
+            throw new InvalidAppointmentTimeException("Agendamento não pode ser feito com mais de 1 ano de antecedência (máximo de 1 ano)");
         }
 
         // Deve estar dentro do horário comercial
         LocalTime timeOfDay = value.toLocalTime();
         if (timeOfDay.isBefore(BUSINESS_START) || timeOfDay.isAfter(BUSINESS_END)) {
-            throw new InvalidTimeSlotException(
-                timeOfDay.format(DateTimeFormatter.ofPattern("HH:mm")),
-                String.format("Horário deve estar entre %s e %s", BUSINESS_START, BUSINESS_END)
+            throw new InvalidAppointmentTimeException(
+                String.format("Horário deve estar dentro do horário comercial (%s às %s)", BUSINESS_START, BUSINESS_END)
             );
         }
 
-        // Deve estar em intervalos de 30 minutos
-        if (value.getMinute() % 30 != 0 || value.getSecond() != 0 || value.getNano() != 0) {
-            throw new InvalidTimeSlotException(
-                value.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-                "Agendamentos devem ser em intervalos de 30 minutos (ex: 08:00, 08:30, 09:00)"
+        // Deve estar em intervalos de 15 minutos
+        if (value.getMinute() % 15 != 0 || value.getSecond() != 0 || value.getNano() != 0) {
+            throw new InvalidAppointmentTimeException(
+                "Agendamentos devem ser em múltiplos de 15 minutos e segundos devem ser zero"
             );
         }
     }
@@ -120,5 +120,33 @@ public record AppointmentTime(LocalDateTime value) {
      */
     public AppointmentTime previousSlot() {
         return new AppointmentTime(value.minusMinutes(30));
+    }
+
+    /**
+     * Verifica se este horário é antes de outro
+     */
+    public boolean isBefore(AppointmentTime other) {
+        return this.value.isBefore(other.value);
+    }
+
+    /**
+     * Verifica se este horário é depois de outro
+     */
+    public boolean isAfter(AppointmentTime other) {
+        return this.value.isAfter(other.value);
+    }
+
+    /**
+     * Exception específica para validação de horário de agendamento
+     */
+    public static class InvalidAppointmentTimeException extends DomainException {
+        public InvalidAppointmentTimeException(String message) {
+            super(message);
+        }
+
+        @Override
+        public String getErrorCode() {
+            return "INVALID_APPOINTMENT_TIME";
+        }
     }
 }

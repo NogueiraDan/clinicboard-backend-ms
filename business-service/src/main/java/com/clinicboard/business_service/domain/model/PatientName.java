@@ -91,6 +91,7 @@ public record PatientName(String value) {
         for (String word : words) {
             if (!word.isEmpty()) {
                 initials.append(Character.toUpperCase(word.charAt(0)));
+                initials.append(".");
             }
         }
         
@@ -110,7 +111,7 @@ public record PatientName(String value) {
      */
     public String getLastName() {
         String[] words = value.trim().split("\\s+");
-        return words.length > 1 ? words[words.length - 1] : "";
+        return words.length > 1 ? words[words.length - 1] : words.length > 0 ? words[0] : "";
     }
 
     /**
