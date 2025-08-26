@@ -10,6 +10,7 @@ import com.clinicboard.business_service.domain.event.AppointmentScheduledEvent;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.exception.AppointmentConflictException;
+import com.clinicboard.business_service.domain.service.AvailabilityDomainService;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -32,14 +33,17 @@ public class ScheduleAppointmentUseCaseImpl implements ScheduleAppointmentComman
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
     private final EventPublisherGateway eventPublisher;
+    private final AvailabilityDomainService availabilityDomainService;
 
     public ScheduleAppointmentUseCaseImpl(
             AppointmentRepository appointmentRepository,
             PatientRepository patientRepository,
-            EventPublisherGateway eventPublisher) {
+            EventPublisherGateway eventPublisher,
+            AvailabilityDomainService availabilityDomainService) {
         this.appointmentRepository = Objects.requireNonNull(appointmentRepository, "AppointmentRepository cannot be null");
         this.patientRepository = Objects.requireNonNull(patientRepository, "PatientRepository cannot be null");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "EventPublisherGateway cannot be null");
+        this.availabilityDomainService = Objects.requireNonNull(availabilityDomainService, "AvailabilityDomainService cannot be null");
     }
 
     @Override

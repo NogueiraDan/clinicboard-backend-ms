@@ -8,6 +8,7 @@ import com.clinicboard.business_service.application.port.out.EventPublisherGatew
 import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.model.*;
+import com.clinicboard.business_service.domain.service.AvailabilityDomainService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,6 +44,9 @@ class ScheduleAppointmentUseCaseImplTest {
     @Mock
     private EventPublisherGateway eventPublisher;
     
+    @Mock
+    private AvailabilityDomainService availabilityDomainService;
+    
     private ScheduleAppointmentCommand scheduleAppointmentUseCase;
 
     @BeforeEach
@@ -50,7 +54,8 @@ class ScheduleAppointmentUseCaseImplTest {
         scheduleAppointmentUseCase = new ScheduleAppointmentUseCaseImpl(
             appointmentRepository, 
             patientRepository, 
-            eventPublisher
+            eventPublisher,
+            availabilityDomainService
         );
     }
 

@@ -3,7 +3,7 @@ package com.clinicboard.business_service.domain.model;
 import com.clinicboard.business_service.domain.exception.AppointmentConflictException;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.event.AppointmentScheduledEvent;
-import com.clinicboard.business_service.domain.event.AppointmentCancelledEvent;
+import com.clinicboard.business_service.domain.event.AppointmentCanceledEvent;
 import com.clinicboard.business_service.domain.event.AppointmentStatusChangedEvent;
 import com.clinicboard.business_service.domain.event.DomainEvent;
 import java.time.LocalDateTime;
@@ -159,9 +159,12 @@ public class Appointment {
             this.createdAt, LocalDateTime.now()
         );
 
-        cancelledAppointment.addDomainEvent(new AppointmentCancelledEvent(
-            this.id, this.patientId, this.professionalId, reason,
-            LocalDateTime.now().toInstant(java.time.ZoneOffset.UTC)
+        cancelledAppointment.addDomainEvent(AppointmentCanceledEvent.of(
+            this.id.value(), 
+            this.patientId.value(), 
+            this.professionalId.value(),
+            this.scheduledTime.value(),
+            LocalDateTime.now()
         ));
 
         return cancelledAppointment;

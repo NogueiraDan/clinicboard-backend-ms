@@ -26,8 +26,8 @@ public class MessagingConfig {
     @Value("${app.messaging.routing-keys.appointment-scheduled:appointment.scheduled}")
     private String appointmentScheduledRoutingKey;
     
-    @Value("${app.messaging.routing-keys.appointment-cancelled:appointment.cancelled}")
-    private String appointmentCancelledRoutingKey;
+    @Value("${app.messaging.routing-keys.appointment-canceled:appointment.canceled}")
+    private String appointmentCanceledRoutingKey;
     
     @Value("${app.messaging.routing-keys.appointment-status-changed:appointment.status.changed}")
     private String appointmentStatusChangedRoutingKey;

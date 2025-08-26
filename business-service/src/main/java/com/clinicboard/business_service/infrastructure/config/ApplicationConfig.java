@@ -5,6 +5,7 @@ import com.clinicboard.business_service.application.port.out.AppointmentReposito
 import com.clinicboard.business_service.application.port.out.EventPublisherGateway;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.application.usecase.*;
+import com.clinicboard.business_service.domain.service.AvailabilityDomainService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,8 +41,9 @@ public class ApplicationConfig {
     public ScheduleAppointmentCommand scheduleAppointmentCommand(
             AppointmentRepository appointmentRepository,
             PatientRepository patientRepository,
-            EventPublisherGateway eventPublisher) {
-        return new ScheduleAppointmentUseCaseImpl(appointmentRepository, patientRepository, eventPublisher);
+            EventPublisherGateway eventPublisher,
+            AvailabilityDomainService availabilityDomainService) {
+        return new ScheduleAppointmentUseCaseImpl(appointmentRepository, patientRepository, eventPublisher, availabilityDomainService);
     }
 
     /**
@@ -60,5 +62,13 @@ public class ApplicationConfig {
     @Bean
     public FindAppointmentQuery findAppointmentQuery(AppointmentRepository appointmentRepository) {
         return new FindAppointmentUseCaseImpl(appointmentRepository);
+    }
+
+    /**
+     * Bean do serviço de domínio para validação de disponibilidade
+     */
+    @Bean
+    public AvailabilityDomainService availabilityDomainService() {
+        return new AvailabilityDomainService();
     }
 }

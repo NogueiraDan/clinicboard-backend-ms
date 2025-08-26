@@ -1,4 +1,4 @@
-package com.clinicboard.business_service.config;
+package com.clinicboard.business_service.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
