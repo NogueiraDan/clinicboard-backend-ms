@@ -37,6 +37,7 @@ public class SecurityConfigurations {
                         .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/users/patient").hasRole("PROFESSIONAL")
+                        .requestMatchers(HttpMethod.GET, "/users/{id}").hasRole("PROFESSIONAL")
                         .requestMatchers(HttpMethod.GET, "/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/metrics/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
