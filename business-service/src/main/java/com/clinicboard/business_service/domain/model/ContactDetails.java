@@ -4,13 +4,16 @@ import com.clinicboard.business_service.domain.exception.DomainException;
 import java.util.regex.Pattern;
 
 /**
- * Value Object que representa detalhes de contato (telefone) no contexto clínico.
+ * Value Object que representa detalhes de contato telefônico no formato internacional brasileiro.
  * 
- * Encapsula regras de validação e formatação específicas para contatos telefônicos.
+ * Aceita exclusivamente o formato: +5511999999999 (código país + DDD + número)
+ * Encapsula regras rigorosas de validação para garantir consistência.
  */
 public record ContactDetails(String value) {
     
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^\\d{10,11}$");
+    // Padrão para formato internacional brasileiro: +55 + DDD (2 dígitos) + número (8 ou 9 dígitos)
+    private static final Pattern INTERNATIONAL_BRAZIL_PATTERN = 
+        Pattern.compile("^\\+55[1-9][1-9]\\d{8,9}$");
 
     public ContactDetails {
         validateContact(value);
@@ -21,39 +24,67 @@ public record ContactDetails(String value) {
             throw new InvalidContactException("Contato não pode ser nulo");
         }
         
-        // Remove espaços, parênteses, hífens e outros caracteres
-        String cleanedValue = value.replaceAll("[^\\d]", "");
-        
-        if (cleanedValue.isEmpty()) {
+        if (value.trim().isEmpty()) {
             throw new InvalidContactException("Contato não pode ser vazio");
         }
         
-        // Remove código do país se presente (55)
-        if (cleanedValue.startsWith("55") && cleanedValue.length() > 11) {
-            cleanedValue = cleanedValue.substring(2);
-        }
-        
-        if (!PHONE_PATTERN.matcher(cleanedValue).matches()) {
+        if (!INTERNATIONAL_BRAZIL_PATTERN.matcher(value).matches()) {
             throw new InvalidContactException(
-                "Contato deve ter entre 10 e 11 dígitos (formato: DDD + número)"
+                "Contato deve estar no formato internacional brasileiro: +5511999999999 " +
+                "(+55 + DDD + número de 8 ou 9 dígitos)"
             );
         }
         
-        // Valida DDD (primeiros 2 dígitos)
-        int ddd = Integer.parseInt(cleanedValue.substring(0, 2));
+        // Extrai e valida o DDD
+        String dddStr = value.substring(3, 5); // Posições 3 e 4 (+55[11])
+        int ddd = Integer.parseInt(dddStr);
+        
         if (!isValidDDD(ddd)) {
             throw new InvalidContactException("DDD inválido: " + ddd);
+        }
+        
+        // Validação adicional para celular: deve começar com 9
+        String phoneNumber = value.substring(5); // Número após +55 e DDD
+        if (phoneNumber.length() == 9 && !phoneNumber.startsWith("9")) {
+            throw new InvalidContactException(
+                "Números de celular (9 dígitos) devem começar com 9"
+            );
         }
     }
 
     private static boolean isValidDDD(int ddd) {
-        // Lista simplificada de DDDs válidos no Brasil
-        return ddd >= 11 && ddd <= 99 && 
-               ddd != 20 && ddd != 23 && ddd != 25 && ddd != 26 && ddd != 29 &&
-               ddd != 30 && ddd != 36 && ddd != 39 && ddd != 40 && ddd != 50 &&
-               ddd != 52 && ddd != 56 && ddd != 57 && ddd != 58 && ddd != 59 &&
-               ddd != 70 && ddd != 72 && ddd != 76 && ddd != 78 && ddd != 80 &&
-               ddd != 90 && ddd != 93 && ddd != 97 && ddd != 99;
+        // DDDs válidos no Brasil (lista atualizada)
+        return switch (ddd) {
+            case 11, 12, 13, 14, 15, 16, 17, 18, 19, // São Paulo
+                 21, 22, 24, // Rio de Janeiro
+                 27, 28, // Espírito Santo
+                 31, 32, 33, 34, 35, 37, 38, // Minas Gerais
+                 41, 42, 43, 44, 45, 46, // Paraná
+                 47, 48, 49, // Santa Catarina
+                 51, 53, 54, 55, // Rio Grande do Sul
+                 61, // Distrito Federal
+                 62, 64, // Goiás
+                 63, // Tocantins
+                 65, 66, // Mato Grosso
+                 67, // Mato Grosso do Sul
+                 68, // Acre
+                 69, // Rondônia
+                 71, 73, 74, 75, 77, // Bahia
+                 79, // Sergipe
+                 81, 87, // Pernambuco
+                 82, // Alagoas
+                 83, // Paraíba
+                 84, // Rio Grande do Norte
+                 85, 88, // Ceará
+                 86, 89, // Piauí
+                 91, 93, 94, // Pará
+                 92, 97, // Amazonas
+                 95, // Roraima
+                 96, // Amapá
+                 98, 99 // Maranhão
+                 -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -64,70 +95,94 @@ public record ContactDetails(String value) {
     }
 
     /**
-     * Retorna o contato limpo (apenas números)
+     * Retorna o número sem formatação (+55 seguido de DDD e número)
      */
     public String getCleanValue() {
-        String cleaned = value.replaceAll("[^\\d]", "");
-        if (cleaned.startsWith("55") && cleaned.length() > 11) {
-            cleaned = cleaned.substring(2);
-        }
-        return cleaned;
+        return value.substring(1); // Remove apenas o '+'
     }
 
     /**
-     * Retorna o contato formatado para exibição
+     * Retorna o número no formato nacional (sem +55)
+     */
+    public String getNationalFormat() {
+        return value.substring(3); // Remove '+55'
+    }
+
+    /**
+     * Retorna o contato formatado para exibição brasileira
      */
     public String getFormattedValue() {
-        String clean = getCleanValue();
+        String national = getNationalFormat();
+        String ddd = national.substring(0, 2);
+        String number = national.substring(2);
         
-        if (clean.length() == 10) {
-            // Formato: (11) 1234-5678
+        if (number.length() == 8) {
+            // Telefone fixo: (11) 1234-5678
             return String.format("(%s) %s-%s", 
-                clean.substring(0, 2), 
-                clean.substring(2, 6), 
-                clean.substring(6));
-        } else if (clean.length() == 11) {
-            // Formato: (11) 91234-5678
+                ddd, 
+                number.substring(0, 4), 
+                number.substring(4));
+        } else if (number.length() == 9) {
+            // Celular: (11) 91234-5678
             return String.format("(%s) %s-%s", 
-                clean.substring(0, 2), 
-                clean.substring(2, 7), 
-                clean.substring(7));
+                ddd, 
+                number.substring(0, 5), 
+                number.substring(5));
         }
         
-        return clean;
+        return national;
     }
 
     /**
      * Retorna apenas o DDD
      */
     public String getDDD() {
-        String clean = getCleanValue();
-        return clean.length() >= 2 ? clean.substring(0, 2) : "";
+        return value.substring(3, 5);
+    }
+
+    /**
+     * Retorna o código do país (+55)
+     */
+    public String getCountryCode() {
+        return "+55";
     }
 
     /**
      * Verifica se é celular (9 dígitos após DDD)
      */
     public boolean isMobilePhone() {
-        return getCleanValue().length() == 11;
+        return getNationalFormat().length() == 11; // DDD (2) + número (9)
     }
 
     /**
      * Verifica se é telefone fixo (8 dígitos após DDD)
      */
     public boolean isLandLine() {
-        return getCleanValue().length() == 10;
+        return getNationalFormat().length() == 10; // DDD (2) + número (8)
     }
 
     /**
      * Retorna versão mascarada para logs/display
      */
     public String getMaskedValue() {
-        String formatted = getFormattedValue();
-        if (formatted.length() > 8) {
-            return formatted.substring(0, formatted.length() - 4) + "****";
+        if (value.length() > 8) {
+            return value.substring(0, value.length() - 4) + "****";
         }
-        return "****";
+        return "+55********";
+    }
+
+    /**
+     * Converte para formato de discagem internacional
+     */
+    public String toInternationalDialingFormat() {
+        return value.replace("+", "00"); // +5511999999999 -> 005511999999999
+    }
+
+    /**
+     * Valida se o número pode receber WhatsApp (celulares brasileiros)
+     */
+    public boolean isWhatsAppEligible() {
+        return isMobilePhone(); // Apenas celulares podem ter WhatsApp
     }
 
     /**
@@ -135,7 +190,7 @@ public record ContactDetails(String value) {
      */
     public static class InvalidContactException extends DomainException {
         
-        private static final String ERROR_CODE = "INVALID_CONTACT";
+        private static final String ERROR_CODE = "INVALID_CONTACT_FORMAT";
         
         public InvalidContactException(String message) {
             super(message);
