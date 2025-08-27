@@ -4,6 +4,7 @@ import com.clinicboard.business_service.application.port.in.*;
 import com.clinicboard.business_service.application.port.out.AppointmentRepository;
 import com.clinicboard.business_service.application.port.out.EventPublisherGateway;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
+import com.clinicboard.business_service.application.port.out.ProfessionalValidationGateway;
 import com.clinicboard.business_service.application.usecase.*;
 import com.clinicboard.business_service.domain.service.AvailabilityDomainService;
 import org.springframework.context.annotation.Bean;
@@ -22,8 +23,9 @@ public class ApplicationConfig {
      * Bean do caso de uso de gerenciar pacientes
      */
     @Bean
-    public ManagePatientCommand managePatientCommand(PatientRepository patientRepository) {
-        return new ManagePatientUseCaseImpl(patientRepository);
+    public ManagePatientCommand managePatientCommand(PatientRepository patientRepository,
+                                                     ProfessionalValidationGateway professionalValidationGateway) {
+        return new ManagePatientUseCaseImpl(patientRepository, professionalValidationGateway);
     }
 
     /**

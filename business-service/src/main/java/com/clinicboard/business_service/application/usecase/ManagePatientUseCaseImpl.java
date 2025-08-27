@@ -2,10 +2,11 @@ package com.clinicboard.business_service.application.usecase;
 
 import com.clinicboard.business_service.application.port.in.ManagePatientCommand;
 import com.clinicboard.business_service.application.port.out.PatientRepository;
+import com.clinicboard.business_service.application.port.out.ProfessionalValidationGateway;
 import com.clinicboard.business_service.domain.model.Patient;
-import com.clinicboard.business_service.domain.model.ProfessionalId;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
+import com.clinicboard.business_service.domain.exception.ProfessionalValidationException;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -25,9 +26,12 @@ import java.util.Objects;
 public class ManagePatientUseCaseImpl implements ManagePatientCommand {
 
     private final PatientRepository patientRepository;
+    private final ProfessionalValidationGateway professionalValidationGateway;
 
-    public ManagePatientUseCaseImpl(PatientRepository patientRepository) {
+    public ManagePatientUseCaseImpl(PatientRepository patientRepository, 
+                                   ProfessionalValidationGateway professionalValidationGateway) {
         this.patientRepository = Objects.requireNonNull(patientRepository, "PatientRepository cannot be null");
+        this.professionalValidationGateway = Objects.requireNonNull(professionalValidationGateway, "ProfessionalValidationGateway cannot be null");
     }
 
     @Override
@@ -35,25 +39,28 @@ public class ManagePatientUseCaseImpl implements ManagePatientCommand {
         Objects.requireNonNull(request, "CreatePatientRequest cannot be null");
 
         try {
-            // 1. Verificar se o email já está em uso
+            // 1. Verificar se o profissional existe e está ativo
+            if (!professionalValidationGateway.isValidAndActiveProfessional(request.professionalId())) {
+                throw ProfessionalValidationException.professionalNotFound(request.professionalId().value());
+            }
+            
+            // 2. Verificar se o email já está em uso
             if (patientRepository.existsByEmail(request.email())) {
                 throw new PatientBusinessRuleException("Email already in use: " + request.email().value());
             }
 
-            // 2. Criar o paciente usando o construtor do agregado
-            // Note: Precisamos de um ProfessionalId temporário para o construtor
-            // Em um cenário real, isso viria do contexto ou seria opcional
+            // 3. Criar o paciente usando o construtor do agregado
             Patient patient = new Patient(
                     request.name(),
                     request.email(),
                     request.contactDetails(),
-                    ProfessionalId.of("DEFAULT-PROF-001") // Temporário
+                    request.professionalId()
             );
 
-            // 3. Persistir o paciente
+            // 4. Persistir o paciente
             Patient savedPatient = patientRepository.save(patient);
 
-            // 4. Retornar resposta
+            // 5. Retornar resposta
             return CreatePatientResponse.success(
                     savedPatient.getId(),
                     savedPatient.getDomainName(),

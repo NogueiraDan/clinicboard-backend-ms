@@ -7,6 +7,7 @@ import com.clinicboard.business_service.infrastructure.adapter.in.web.dto.Patien
 import com.clinicboard.business_service.domain.model.PatientName;
 import com.clinicboard.business_service.domain.model.Email;
 import com.clinicboard.business_service.domain.model.ContactDetails;
+import com.clinicboard.business_service.domain.model.ProfessionalId;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
@@ -25,7 +26,8 @@ public interface PatientWebMapper {
         return new CreatePatientRequest(
             PatientName.of(dto.name()),
             Email.of(dto.email()),
-            ContactDetails.of(dto.phone())
+            ContactDetails.of(dto.phone()),
+            ProfessionalId.of(dto.professionalId())
         );
     }
     

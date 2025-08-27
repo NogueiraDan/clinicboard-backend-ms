@@ -16,7 +16,11 @@ public record ManagePatientRequestDto(
         String email,
         
         @Schema(description = "Telefone do paciente", example = "(11) 99999-9999")
-        String phone
+        String phone,
+        
+        @Schema(description = "ID do profissional responsável", example = "PROF-12345")
+        @NotBlank(message = "ID do profissional responsável é obrigatório")
+        String professionalId
 ) {
     public ManagePatientRequestDto {
         // Limpeza e formatação dos dados
@@ -28,6 +32,9 @@ public record ManagePatientRequestDto(
         }
         if (phone != null) {
             phone = phone.trim();
+        }
+        if (professionalId != null) {
+            professionalId = professionalId.trim().toUpperCase();
         }
     }
 }

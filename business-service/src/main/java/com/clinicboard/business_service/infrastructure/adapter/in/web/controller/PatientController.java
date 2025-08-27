@@ -35,17 +35,18 @@ public class PatientController {
 
     @Operation(
         summary = "Registrar novo paciente",
-        description = "Cria um novo paciente no sistema"
+        description = "Cria um novo paciente no sistema associado a um profissional responsável"
     )
     @ApiResponse(responseCode = "201", description = "Paciente criado com sucesso")
     @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos")
+    @ApiResponse(responseCode = "404", description = "Profissional responsável não encontrado")
     @ApiResponse(responseCode = "409", description = "Paciente já existe")
     @PostMapping
     public ResponseEntity<PatientResponseDto> createPatient(
             @Valid @RequestBody ManagePatientRequestDto request) {
         
-        log.info("Recebida requisição para criar paciente: name={}, email={}", 
-                request.name(), request.email());
+        log.info("Recebida requisição para criar paciente: name={}, email={}, professionalId={}", 
+                request.name(), request.email(), request.professionalId());
         
         try {
             var applicationRequest = patientMapper.toApplicationRequest(request);

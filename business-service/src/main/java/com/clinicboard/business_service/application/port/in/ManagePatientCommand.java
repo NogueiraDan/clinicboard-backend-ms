@@ -4,6 +4,7 @@ import com.clinicboard.business_service.domain.model.PatientId;
 import com.clinicboard.business_service.domain.model.PatientName;
 import com.clinicboard.business_service.domain.model.Email;
 import com.clinicboard.business_service.domain.model.ContactDetails;
+import com.clinicboard.business_service.domain.model.ProfessionalId;
 
 /**
  * Command para gerenciar pacientes no sistema.
@@ -51,7 +52,8 @@ public interface ManagePatientCommand {
     record CreatePatientRequest(
         PatientName name,
         Email email,
-        ContactDetails contactDetails
+        ContactDetails contactDetails,
+        ProfessionalId professionalId
     ) {
         public CreatePatientRequest {
             if (name == null) {
@@ -63,6 +65,9 @@ public interface ManagePatientCommand {
             if (contactDetails == null) {
                 throw new IllegalArgumentException("Dados de contato não podem ser nulos");
             }
+            if (professionalId == null) {
+                throw new IllegalArgumentException("ID do profissional responsável não pode ser nulo");
+            }
         }
 
         /**
@@ -71,8 +76,9 @@ public interface ManagePatientCommand {
         public static CreatePatientRequest of(
                 PatientName name,
                 Email email,
-                ContactDetails contactDetails) {
-            return new CreatePatientRequest(name, email, contactDetails);
+                ContactDetails contactDetails,
+                ProfessionalId professionalId) {
+            return new CreatePatientRequest(name, email, contactDetails, professionalId);
         }
     }
 
