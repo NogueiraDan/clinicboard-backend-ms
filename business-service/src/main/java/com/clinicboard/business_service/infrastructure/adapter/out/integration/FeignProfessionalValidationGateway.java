@@ -1,4 +1,4 @@
-package com.clinicboard.business_service.infrastructure.adapter.out.gateway;
+package com.clinicboard.business_service.infrastructure.adapter.out.integration;
 
 import com.clinicboard.business_service.application.port.out.ProfessionalValidationGateway;
 import com.clinicboard.business_service.domain.exception.ProfessionalValidationException;
