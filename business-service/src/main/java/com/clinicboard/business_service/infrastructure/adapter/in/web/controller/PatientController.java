@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * da camada de aplicação para operações relacionadas a pacientes.
  */
 @RestController
-@RequestMapping("/api/v1/patients")
+@RequestMapping("api/v1/patients")
 @Tag(name = "Patients", description = "Operações de gerenciamento de pacientes")
 @RequiredArgsConstructor
 @Slf4j

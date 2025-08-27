@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
  * - Responsabilidade única: apenas conversão HTTP ↔ Application
  */
 @RestController
-@RequestMapping("/api/v1/appointments")
+@RequestMapping("api/v1/appointments")
 @Tag(name = "Appointments", description = "Operações de gerenciamento de consultas")
 @RequiredArgsConstructor
 @Slf4j
