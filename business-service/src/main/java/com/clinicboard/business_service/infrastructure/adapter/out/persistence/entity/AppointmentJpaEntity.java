@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * Representa a estrutura de dados no banco, independente do modelo de domínio.
  */
 @Entity
-@Table(name = "appointments")
+@Table(name = "agendamentos")
 @Data
 @Builder
 @NoArgsConstructor

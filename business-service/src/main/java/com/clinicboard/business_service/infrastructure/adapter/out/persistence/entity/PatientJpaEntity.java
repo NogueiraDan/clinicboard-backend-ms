@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * separada do modelo de domínio para manter a independência da arquitetura hexagonal.
  */
 @Entity
-@Table(name = "patients")
+@Table(name = "pacientes")
 @Data
 @Builder
 @NoArgsConstructor
