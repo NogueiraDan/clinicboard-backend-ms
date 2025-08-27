@@ -34,7 +34,7 @@ public interface AppointmentJpaRepository extends JpaRepository<AppointmentJpaEn
     
     /**
      * Verifica conflitos de horário para um profissional em um período específico.
-     * Considera uma janela de 30 minutos antes e depois do horário solicitado.
+     * A lógica de sobreposição de horários é calculada no código Java.
      */
     @Query("""
         SELECT a FROM AppointmentJpaEntity a 
@@ -42,7 +42,7 @@ public interface AppointmentJpaRepository extends JpaRepository<AppointmentJpaEn
         AND a.status IN ('SCHEDULED', 'CONFIRMED', 'IN_PROGRESS')
         AND (
             (a.scheduledTime BETWEEN :startTime AND :endTime)
-            OR (:scheduledTime BETWEEN a.scheduledTime AND a.scheduledTime + 30*60*1000000000L)
+            OR (a.scheduledTime <= :scheduledTime AND :scheduledTime <= :endTime)
         )
         """)
     List<AppointmentJpaEntity> findConflictingAppointments(
