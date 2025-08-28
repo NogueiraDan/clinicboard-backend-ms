@@ -2,6 +2,9 @@ package com.clinicboard.business_service.infrastructure.adapter.out.integration.
 
 import com.clinicboard.business_service.domain.exception.ProfessionalValidationException;
 import com.clinicboard.business_service.infrastructure.adapter.out.integration.dto.UserServiceResponseDto;
+
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,7 +21,7 @@ public class UserServiceFeignClientFallback implements UserServiceFeignClient {
     private static final Logger log = LoggerFactory.getLogger(UserServiceFeignClientFallback.class);
     
     @Override
-    public UserServiceResponseDto findUserById(String userId) {
+    public Optional<?> findById(String userId) {
         log.error("Fallback acionado: user-service está indisponível para validação do profissional com ID: {}", userId);
         
         throw new ProfessionalValidationException(

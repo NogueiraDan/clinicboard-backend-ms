@@ -4,6 +4,7 @@ import com.clinicboard.business_service.application.port.in.ManagePatientCommand
 import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.application.port.out.ProfessionalValidationGateway;
 import com.clinicboard.business_service.domain.model.Patient;
+import lombok.extern.slf4j.Slf4j;
 import com.clinicboard.business_service.domain.exception.DomainException;
 import com.clinicboard.business_service.domain.exception.PatientBusinessRuleException;
 import com.clinicboard.business_service.domain.exception.ProfessionalValidationException;
@@ -23,6 +24,7 @@ import java.util.Objects;
  * - Validação de regras de negócio
  */
 @Component
+@Slf4j
 public class ManagePatientUseCaseImpl implements ManagePatientCommand {
 
     private final PatientRepository patientRepository;
@@ -37,6 +39,8 @@ public class ManagePatientUseCaseImpl implements ManagePatientCommand {
     @Override
     public CreatePatientResponse createPatient(CreatePatientRequest request) {
         Objects.requireNonNull(request, "CreatePatientRequest cannot be null");
+         log.info("Requisição para criar paciente no use-case: name={}, email={}, professionalId={}", 
+                request.name(), request.email(), request.professionalId());
 
         try {
             // 1. Verificar se o profissional existe e está ativo

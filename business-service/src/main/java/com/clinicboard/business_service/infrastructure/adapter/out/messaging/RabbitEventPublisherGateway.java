@@ -54,8 +54,8 @@ public class RabbitEventPublisherGateway implements EventPublisherGateway {
     private String dlqRoutingKey;
 
     @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishAppointmentScheduledFallback")
-    @Retry(name = "notification-service")
+    @CircuitBreaker(name = "business-service", fallbackMethod = "publishAppointmentScheduledFallback")
+    @Retry(name = "business-service")
     public void publishAppointmentScheduled(AppointmentScheduledEvent event) {
         try {
             log.debug("Publishing appointment scheduled event for appointment: {}", 
@@ -77,8 +77,8 @@ public class RabbitEventPublisherGateway implements EventPublisherGateway {
     }
 
     @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishAppointmentCanceledFallback")
-    @Retry(name = "notification-service")
+    @CircuitBreaker(name = "business-service", fallbackMethod = "publishAppointmentCanceledFallback")
+    @Retry(name = "business-service")
     public void publishAppointmentCanceled(AppointmentCanceledEvent event) {
         try {
             log.debug("Publishing appointment canceled event for appointment: {}", 
@@ -100,8 +100,8 @@ public class RabbitEventPublisherGateway implements EventPublisherGateway {
     }
 
     @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishAppointmentStatusChangedFallback")
-    @Retry(name = "notification-service")
+    @CircuitBreaker(name = "business-service", fallbackMethod = "publishAppointmentStatusChangedFallback")
+    @Retry(name = "business-service")
     public void publishAppointmentStatusChanged(AppointmentStatusChangedEvent event) {
         try {
             log.debug("Publishing appointment status changed event for appointment: {}", 
@@ -125,8 +125,8 @@ public class RabbitEventPublisherGateway implements EventPublisherGateway {
     }
 
     @Override
-    @CircuitBreaker(name = "notification-service", fallbackMethod = "publishAppointmentRescheduledFallback")
-    @Retry(name = "notification-service")
+    @CircuitBreaker(name = "business-service", fallbackMethod = "publishAppointmentRescheduledFallback")
+    @Retry(name = "business-service")
     public void publishAppointmentRescheduled(AppointmentRescheduledEvent event) {
         try {
             log.debug("Publishing appointment rescheduled event for appointment: {}", 

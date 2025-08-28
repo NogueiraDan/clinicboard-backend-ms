@@ -14,17 +14,19 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class FindUserUseCaseImpl implements FindUserUseCase {
-    
+
     private final UserPersistencePort userPersistencePort;
 
     public FindUserUseCaseImpl(UserPersistencePort userPersistencePort) {
         this.userPersistencePort = userPersistencePort;
-    }    @Override
+    }
+
+    @Override
     public User findById(UserId id) {
         return userPersistencePort.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o id: " + id.getValue()));
     }
-    
+
     @Override
     public User findByEmail(String emailValue) {
         Email email = new Email(emailValue);

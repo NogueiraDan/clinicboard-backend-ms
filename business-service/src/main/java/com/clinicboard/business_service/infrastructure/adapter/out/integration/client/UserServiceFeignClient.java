@@ -1,6 +1,5 @@
 package com.clinicboard.business_service.infrastructure.adapter.out.integration.client;
-
-import com.clinicboard.business_service.infrastructure.adapter.out.integration.dto.UserServiceResponseDto;
+import java.util.Optional;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  */
 @FeignClient(
     name = "user-service",
-    url = "${app.integration.feign.users:http://localhost:8081}",
+    // url = "${app.integration.feign.users:http://localhost:8081}",
     fallback = UserServiceFeignClientFallback.class
 )
 public interface UserServiceFeignClient {
@@ -25,5 +24,5 @@ public interface UserServiceFeignClient {
      * @return dados do usuário encontrado
      */
     @GetMapping("/users/{id}")
-    UserServiceResponseDto findUserById(@PathVariable("id") String userId);
+    Optional<?> findById(@PathVariable("id") String userId);
 }

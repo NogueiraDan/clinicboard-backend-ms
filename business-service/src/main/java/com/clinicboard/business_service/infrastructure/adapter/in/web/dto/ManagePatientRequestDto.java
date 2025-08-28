@@ -34,7 +34,7 @@ public record ManagePatientRequestDto(
             phone = phone.trim();
         }
         if (professionalId != null) {
-            professionalId = professionalId.trim().toUpperCase();
+            professionalId = professionalId.trim();
         }
     }
 }

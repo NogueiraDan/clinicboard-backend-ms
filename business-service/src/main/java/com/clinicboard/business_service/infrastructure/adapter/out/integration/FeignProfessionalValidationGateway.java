@@ -4,8 +4,8 @@ import com.clinicboard.business_service.application.port.out.ProfessionalValidat
 import com.clinicboard.business_service.domain.exception.ProfessionalValidationException;
 import com.clinicboard.business_service.domain.model.ProfessionalId;
 import com.clinicboard.business_service.infrastructure.adapter.out.integration.client.UserServiceFeignClient;
-import com.clinicboard.business_service.infrastructure.adapter.out.integration.dto.UserServiceResponseDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,8 @@ import org.springframework.stereotype.Component;
 public class FeignProfessionalValidationGateway implements ProfessionalValidationGateway {
     
     private static final Logger log = LoggerFactory.getLogger(FeignProfessionalValidationGateway.class);
-    private static final String CIRCUIT_BREAKER_NAME = "professional-validation";
+    private static final String CIRCUIT_BREAKER_NAME = "business-service";
+
     
     private final UserServiceFeignClient userServiceClient;
     
@@ -33,30 +34,28 @@ public class FeignProfessionalValidationGateway implements ProfessionalValidatio
     public boolean isValidAndActiveProfessional(ProfessionalId professionalId) {
         log.debug("Validando se profissional está ativo com ID: {}", professionalId.value());
         
-        try {
-            UserServiceResponseDto user = userServiceClient.findUserById(professionalId.value());
-            
-            if (user == null) {
-                log.warn("Usuário não encontrado para ID: {}", professionalId.value());
-                return false;
-            }
-            
-            boolean isValid = user.isActive() && user.isProfessional();
-            
-            if (!isValid) {
-                log.warn("Usuário não é um profissional ativo para ID: {}", professionalId.value());
-            } else {
-                log.debug("Profissional validado com sucesso: {} - {}", professionalId.value(), user.name());
-            }
-            
-            return isValid;
-            
-        } catch (Exception e) {
-            log.error("Erro ao validar profissional {}: {}", professionalId.value(), e.getMessage(), e);
-            throw new ProfessionalValidationException(
-                "Erro ao validar profissional. Tente novamente."
-            );
+       try {
+        Optional<?> user = userServiceClient.findById(professionalId.value());
+        
+        if (user == null) {
+            log.warn("Usuário não encontrado para ID: {}", professionalId.value());
+            return false;
         }
+        
+        if (user.isPresent()) {
+            log.debug("Profissional validado com sucesso: {}", professionalId.value());
+            return true;
+        } else {
+            log.warn("Usuário não encontrado para ID: {}", professionalId.value());
+            return false;
+        }
+        
+    } catch (Exception e) {
+        log.error("Erro ao validar profissional {}: {}", professionalId.value(), e.getMessage(), e);
+        throw new ProfessionalValidationException(
+            "Erro ao validar profissional. Tente novamente."
+        );
+    }
     }
     
     @Override
@@ -65,12 +64,12 @@ public class FeignProfessionalValidationGateway implements ProfessionalValidatio
         log.debug("Verificando existência do profissional com ID: {}", professionalId.value());
         
         try {
-            UserServiceResponseDto user = userServiceClient.findUserById(professionalId.value());
+            Optional<?> user = userServiceClient.findById(professionalId.value());
             
-            boolean exists = user != null;
+            boolean exists = user != null && user.isPresent();
             
             if (exists) {
-                log.debug("Profissional encontrado: {} - {}", professionalId.value(), user.name());
+                log.debug("Profissional encontrado: {}", professionalId.value());
             } else {
                 log.warn("Profissional não encontrado para ID: {}", professionalId.value());
             }
