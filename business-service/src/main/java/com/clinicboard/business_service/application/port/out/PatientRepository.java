@@ -3,6 +3,7 @@ package com.clinicboard.business_service.application.port.out;
 import com.clinicboard.business_service.domain.model.Patient;
 import com.clinicboard.business_service.domain.model.PatientId;
 import com.clinicboard.business_service.domain.model.PatientStatus;
+import com.clinicboard.business_service.domain.model.ProfessionalId;
 import com.clinicboard.business_service.domain.model.Email;
 
 import java.util.List;
@@ -62,6 +63,23 @@ public interface PatientRepository {
     List<Patient> findByStatus(PatientStatus status);
 
     /**
+     * Busca pacientes de um profissional específico.
+     * 
+     * @param professionalId ID do profissional
+     * @return lista de pacientes ativos do profissional
+     */
+    List<Patient> findByProfessionalId(ProfessionalId professionalId);
+
+    /**
+     * Busca pacientes de um profissional por status.
+     * 
+     * @param professionalId ID do profissional
+     * @param status status do paciente
+     * @return lista de pacientes do profissional com o status especificado
+     */
+    List<Patient> findByProfessionalIdAndStatus(ProfessionalId professionalId, PatientStatus status);
+
+    /**
      * Busca todos os pacientes ativos.
      * 
      * @return lista de pacientes ativos
@@ -116,12 +134,13 @@ public interface PatientRepository {
     long countByStatus(PatientStatus status);
 
     /**
-     * Busca pacientes criados recentemente.
+     * Conta pacientes ativos de um profissional específico.
      * 
-     * @param limit limite de resultados
-     * @return lista dos pacientes mais recentes
+     * @param professionalId ID do profissional
+     * @return número de pacientes ativos do profissional
      */
-    List<Patient> findRecentPatients(int limit);
+    long countByProfessionalId(ProfessionalId professionalId);
+
 
     /**
      * Busca todos os pacientes (com paginação).

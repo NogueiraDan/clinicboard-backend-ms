@@ -39,6 +39,11 @@ public class Patient {
         this.updatedAt = LocalDateTime.now();
     }
 
+    // Construtor conveniente com Strings para novos pacientes
+    public Patient(String name, String email, String contact, String professionalId) {
+        this(PatientName.of(name), Email.of(email), ContactDetails.of(contact), ProfessionalId.of(professionalId));
+    }
+
     // Construtor para pacientes existentes (com ID)
     public Patient(PatientId id, PatientName name, Email email, ContactDetails contact, 
                    ProfessionalId assignedProfessionalId, PatientStatus status,

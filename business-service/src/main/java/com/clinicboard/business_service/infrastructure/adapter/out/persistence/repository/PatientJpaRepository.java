@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,26 +19,52 @@ import java.util.Optional;
 public interface PatientJpaRepository extends JpaRepository<PatientJpaEntity, String> {
     
     /**
-     * Busca paciente por email.
+     * Busca paciente por email ativo.
      * Útil para validar unicidade de email durante criação/atualização.
      */
-    Optional<PatientJpaEntity> findByEmailAndActiveTrue(String email);
+    @Query("SELECT p FROM PatientJpaEntity p WHERE p.email = :email AND p.status = 'ACTIVE'")
+    Optional<PatientJpaEntity> findByEmailAndActiveTrue(@Param("email") String email);
     
     /**
      * Busca paciente ativo por ID.
      * Garante que apenas pacientes ativos sejam retornados nas consultas.
      */
-    @Query("SELECT p FROM PatientJpaEntity p WHERE p.patientId = :patientId AND p.active = true")
+    @Query("SELECT p FROM PatientJpaEntity p WHERE p.patientId = :patientId AND p.status = 'ACTIVE'")
     Optional<PatientJpaEntity> findActivePatientById(@Param("patientId") String patientId);
+    
+    /**
+     * Busca todos os pacientes ativos de um profissional específico.
+     */
+    @Query("SELECT p FROM PatientJpaEntity p WHERE p.professionalId = :professionalId AND p.status = 'ACTIVE' ORDER BY p.name")
+    List<PatientJpaEntity> findActivePatientsByProfessionalId(@Param("professionalId") String professionalId);
+    
+    /**
+     * Busca pacientes por status específico.
+     */
+    @Query("SELECT p FROM PatientJpaEntity p WHERE p.status = :status ORDER BY p.name")
+    List<PatientJpaEntity> findByStatus(@Param("status") String status);
+    
+    /**
+     * Busca pacientes de um profissional por status.
+     */
+    @Query("SELECT p FROM PatientJpaEntity p WHERE p.professionalId = :professionalId AND p.status = :status ORDER BY p.name")
+    List<PatientJpaEntity> findByProfessionalIdAndStatus(@Param("professionalId") String professionalId, @Param("status") String status);
     
     /**
      * Verifica se existe paciente ativo com o email informado.
      */
-    boolean existsByEmailAndActiveTrue(String email);
+    @Query("SELECT COUNT(p) > 0 FROM PatientJpaEntity p WHERE p.email = :email AND p.status = 'ACTIVE'")
+    boolean existsByEmailAndActiveTrue(@Param("email") String email);
     
     /**
      * Conta total de pacientes ativos no sistema.
      */
-    @Query("SELECT COUNT(p) FROM PatientJpaEntity p WHERE p.active = true")
+    @Query("SELECT COUNT(p) FROM PatientJpaEntity p WHERE p.status = 'ACTIVE'")
     long countActivePatients();
+    
+    /**
+     * Conta pacientes ativos de um profissional específico.
+     */
+    @Query("SELECT COUNT(p) FROM PatientJpaEntity p WHERE p.professionalId = :professionalId AND p.status = 'ACTIVE'")
+    long countActivePatientsByProfessionalId(@Param("professionalId") String professionalId);
 }

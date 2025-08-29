@@ -28,13 +28,16 @@ public interface PatientPersistenceMapper {
             return null;
         }
         
+        // Converte string do banco para enum do domínio
+        PatientStatus status = PatientStatus.fromString(jpaEntity.getStatus());
+        
         return new Patient(
             PatientId.of(jpaEntity.getPatientId()),
             PatientName.of(jpaEntity.getName()),
             Email.of(jpaEntity.getEmail()),
             ContactDetails.of(jpaEntity.getContactDetails()),
-            ProfessionalId.of("default-professional"), // TODO: Implementar mapeamento correto
-            jpaEntity.getActive() ? PatientStatus.ACTIVE : PatientStatus.INACTIVE,
+            ProfessionalId.of(jpaEntity.getProfessionalId()),
+            status,
             jpaEntity.getCreatedAt(),
             jpaEntity.getUpdatedAt()
         );
@@ -53,7 +56,8 @@ public interface PatientPersistenceMapper {
             .name(patient.getName())
             .email(patient.getEmail().value())
             .contactDetails(patient.getContact().value())
-            .active(patient.getStatus() == PatientStatus.ACTIVE)
+            .professionalId(patient.getAssignedProfessionalId().value())
+            .status(patient.getStatus().name())
             .build();
     }
     
@@ -69,7 +73,8 @@ public interface PatientPersistenceMapper {
         jpaEntity.setName(patient.getName());
         jpaEntity.setEmail(patient.getEmail().value());
         jpaEntity.setContactDetails(patient.getContact().value());
-        jpaEntity.setActive(patient.getStatus() == PatientStatus.ACTIVE);
+        jpaEntity.setProfessionalId(patient.getAssignedProfessionalId().value());
+        jpaEntity.setStatus(patient.getStatus().name());
         // createdAt, version permanecem inalterados
     }
 }

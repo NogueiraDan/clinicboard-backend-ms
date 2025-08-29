@@ -38,9 +38,12 @@ public class PatientJpaEntity {
     @Column(name = "contact_details", length = 50)
     private String contactDetails;
 
-    @Column(name = "active", nullable = false)
+    @Column(name = "professional_id", nullable = false, length = 36)
+    private String professionalId;
+
+    @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private Boolean active = Boolean.TRUE;
+    private String status = "ACTIVE";
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -67,9 +70,12 @@ public class PatientJpaEntity {
     public String getContactDetails() { return contactDetails; }
     public void setContactDetails(String contactDetails) { this.contactDetails = contactDetails; }
     
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
+    public String getProfessionalId() { return professionalId; }
+    public void setProfessionalId(String professionalId) { this.professionalId = professionalId; }
     
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+   
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     

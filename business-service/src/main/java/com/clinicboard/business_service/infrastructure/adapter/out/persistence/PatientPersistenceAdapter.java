@@ -5,6 +5,7 @@ import com.clinicboard.business_service.application.port.out.PatientRepository;
 import com.clinicboard.business_service.domain.model.Patient;
 import com.clinicboard.business_service.domain.model.PatientId;
 import com.clinicboard.business_service.domain.model.PatientStatus;
+import com.clinicboard.business_service.domain.model.ProfessionalId;
 import com.clinicboard.business_service.domain.model.Email;
 import com.clinicboard.business_service.infrastructure.adapter.out.persistence.entity.PatientJpaEntity;
 import com.clinicboard.business_service.infrastructure.adapter.out.persistence.repository.PatientJpaRepository;
@@ -108,7 +109,6 @@ public class PatientPersistenceAdapter implements PatientRepository {
             return patientJpaRepository.findAll()
                     .stream()
                     .filter(entity -> entity.getName().toLowerCase().contains(name.toLowerCase()))
-                    .filter(PatientJpaEntity::getActive)
                     .map(patientMapper::toDomainEntity)
                     .collect(Collectors.toList());
                     
@@ -123,10 +123,8 @@ public class PatientPersistenceAdapter implements PatientRepository {
         log.debug("Buscando pacientes por status: {}", status);
         
         try {
-            boolean isActive = status == PatientStatus.ACTIVE;
-            return patientJpaRepository.findAll()
+            return patientJpaRepository.findByStatus(status.name())
                     .stream()
-                    .filter(entity -> entity.getActive() == isActive)
                     .map(patientMapper::toDomainEntity)
                     .collect(Collectors.toList());
                     
@@ -137,13 +135,45 @@ public class PatientPersistenceAdapter implements PatientRepository {
     }
 
     @Override
+    public List<Patient> findByProfessionalId(ProfessionalId professionalId) {
+        log.debug("Buscando pacientes por profissional: {}", professionalId.value());
+        
+        try {
+            return patientJpaRepository.findActivePatientsByProfessionalId(professionalId.value())
+                    .stream()
+                    .map(patientMapper::toDomainEntity)
+                    .collect(Collectors.toList());
+                    
+        } catch (Exception e) {
+            log.error("Erro ao buscar pacientes por profissional {}: {}", professionalId.value(), e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<Patient> findByProfessionalIdAndStatus(ProfessionalId professionalId, PatientStatus status) {
+        log.debug("Buscando pacientes por profissional {} e status {}", professionalId.value(), status);
+        
+        try {
+            return patientJpaRepository.findByProfessionalIdAndStatus(professionalId.value(), status.name())
+                    .stream()
+                    .map(patientMapper::toDomainEntity)
+                    .collect(Collectors.toList());
+                    
+        } catch (Exception e) {
+            log.error("Erro ao buscar pacientes por profissional {} e status {}: {}", 
+                     professionalId.value(), status, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    @Override
     public List<Patient> findActivePatients() {
         log.debug("Buscando pacientes ativos");
         
         try {
-            return patientJpaRepository.findAll()
+            return patientJpaRepository.findByStatus(PatientStatus.ACTIVE.name())
                     .stream()
-                    .filter(PatientJpaEntity::getActive)
                     .map(patientMapper::toDomainEntity)
                     .collect(Collectors.toList());
                     
@@ -203,7 +233,6 @@ public class PatientPersistenceAdapter implements PatientRepository {
             
             if (patientEntity.isPresent()) {
                 PatientJpaEntity entity = patientEntity.get();
-                entity.setActive(Boolean.FALSE);
                 patientJpaRepository.save(entity);
                 
                 log.info("Paciente desativado com sucesso: id={}", patientId.value());
@@ -235,11 +264,7 @@ public class PatientPersistenceAdapter implements PatientRepository {
         log.debug("Contando pacientes por status: {}", status);
         
         try {
-            boolean isActive = status == PatientStatus.ACTIVE;
-            return patientJpaRepository.findAll()
-                    .stream()
-                    .filter(entity -> entity.getActive() == isActive)
-                    .count();
+            return patientJpaRepository.findByStatus(status.name()).size();
                     
         } catch (Exception e) {
             log.error("Erro ao contar pacientes por status {}: {}", status, e.getMessage(), e);
@@ -248,21 +273,15 @@ public class PatientPersistenceAdapter implements PatientRepository {
     }
 
     @Override
-    public List<Patient> findRecentPatients(int limit) {
-        log.debug("Buscando {} pacientes recentes", limit);
+    public long countByProfessionalId(ProfessionalId professionalId) {
+        log.debug("Contando pacientes por profissional: {}", professionalId.value());
         
         try {
-            Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
-            return patientJpaRepository.findAll(pageable)
-                    .getContent()
-                    .stream()
-                    .filter(PatientJpaEntity::getActive)
-                    .map(patientMapper::toDomainEntity)
-                    .collect(Collectors.toList());
+            return patientJpaRepository.countActivePatientsByProfessionalId(professionalId.value());
                     
         } catch (Exception e) {
-            log.error("Erro ao buscar pacientes recentes: {}", e.getMessage(), e);
-            return List.of();
+            log.error("Erro ao contar pacientes por profissional {}: {}", professionalId.value(), e.getMessage(), e);
+            return 0;
         }
     }
 
@@ -275,7 +294,6 @@ public class PatientPersistenceAdapter implements PatientRepository {
             return patientJpaRepository.findAll(pageable)
                     .getContent()
                     .stream()
-                    .filter(PatientJpaEntity::getActive)
                     .map(patientMapper::toDomainEntity)
                     .collect(Collectors.toList());
                     
