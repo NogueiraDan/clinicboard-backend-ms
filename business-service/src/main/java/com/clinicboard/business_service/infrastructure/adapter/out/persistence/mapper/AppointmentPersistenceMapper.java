@@ -39,7 +39,9 @@ public interface AppointmentPersistenceMapper {
             mapToDomainAppointmentType(jpaEntity.getAppointmentType()),
             jpaEntity.getObservations(),
             jpaEntity.getCreatedAt(),
-            jpaEntity.getUpdatedAt()
+            jpaEntity.getUpdatedAt(),
+            jpaEntity.getCancelledAt(),
+            jpaEntity.getCancellationReason()
         );
     }
     
@@ -59,6 +61,10 @@ public interface AppointmentPersistenceMapper {
             .appointmentType(mapToJpaAppointmentType(appointment.getType()))
             .status(mapToJpaAppointmentStatus(appointment.getStatus()))
             .observations(appointment.getObservation())
+            .createdAt(appointment.getCreatedAt())
+            .updatedAt(appointment.getUpdatedAt())
+            .cancelledAt(appointment.getCancelledAt())
+            .cancellationReason(appointment.getCancellationReason())
             .build();
     }
     
@@ -74,6 +80,9 @@ public interface AppointmentPersistenceMapper {
         jpaEntity.setAppointmentType(mapToJpaAppointmentType(appointment.getType()));
         jpaEntity.setStatus(mapToJpaAppointmentStatus(appointment.getStatus()));
         jpaEntity.setObservations(appointment.getObservation());
+        jpaEntity.setUpdatedAt(appointment.getUpdatedAt());
+        jpaEntity.setCancelledAt(appointment.getCancelledAt());
+        jpaEntity.setCancellationReason(appointment.getCancellationReason());
         // ID, createdAt, version permanecem inalterados
     }
     

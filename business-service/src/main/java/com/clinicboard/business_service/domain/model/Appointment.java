@@ -36,6 +36,10 @@ public class Appointment {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // Campos específicos para cancelamento - seguindo DDD
+    private LocalDateTime cancelledAt;
+    private String cancellationReason;
+    
     // Domain Events - seguindo pattern do Eric Evans
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
@@ -51,6 +55,8 @@ public class Appointment {
         this.observation = "";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.cancelledAt = null; // Agendamento novo não está cancelado
+        this.cancellationReason = null;
         
         // Validações de negócio no construtor
         this.validateNewAppointment();
@@ -79,6 +85,27 @@ public class Appointment {
         this.observation = observation != null ? observation : "";
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt não pode ser nulo");
         this.updatedAt = Objects.requireNonNull(updatedAt, "UpdatedAt não pode ser nulo");
+        this.cancelledAt = null; // Será definido se for cancelado
+        this.cancellationReason = null;
+    }
+
+    // Construtor completo para reconstrução com cancelamento
+    public Appointment(AppointmentId id, PatientId patientId, ProfessionalId professionalId,
+                      AppointmentTime scheduledTime, AppointmentStatus status, 
+                      AppointmentType type, String observation,
+                      LocalDateTime createdAt, LocalDateTime updatedAt,
+                      LocalDateTime cancelledAt, String cancellationReason) {
+        this.id = Objects.requireNonNull(id, "AppointmentId não pode ser nulo para agendamento existente");
+        this.patientId = Objects.requireNonNull(patientId, "PatientId não pode ser nulo");
+        this.professionalId = Objects.requireNonNull(professionalId, "ProfessionalId não pode ser nulo");
+        this.scheduledTime = Objects.requireNonNull(scheduledTime, "AppointmentTime não pode ser nulo");
+        this.status = Objects.requireNonNull(status, "AppointmentStatus não pode ser nulo");
+        this.type = Objects.requireNonNull(type, "AppointmentType não pode ser nulo");
+        this.observation = observation != null ? observation : "";
+        this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt não pode ser nulo");
+        this.updatedAt = Objects.requireNonNull(updatedAt, "UpdatedAt não pode ser nulo");
+        this.cancelledAt = cancelledAt;
+        this.cancellationReason = cancellationReason;
     }
 
     // Construtor protegido para frameworks
@@ -92,6 +119,8 @@ public class Appointment {
         this.observation = null;
         this.createdAt = null;
         this.updatedAt = null;
+        this.cancelledAt = null;
+        this.cancellationReason = null;
     }
 
     /**
@@ -152,11 +181,11 @@ public class Appointment {
             throw new InvalidAppointmentException("Motivo do cancelamento é obrigatório");
         }
 
-        AppointmentStatus previousStatus = this.status;
+        LocalDateTime cancelTime = LocalDateTime.now();
         Appointment cancelledAppointment = new Appointment(
             this.id, this.patientId, this.professionalId, this.scheduledTime,
-            AppointmentStatus.CANCELLED, this.type, reason,
-            this.createdAt, LocalDateTime.now()
+            AppointmentStatus.CANCELLED, this.type, this.observation,
+            this.createdAt, cancelTime, cancelTime, reason.trim()
         );
 
         cancelledAppointment.addDomainEvent(AppointmentCanceledEvent.of(
@@ -164,7 +193,7 @@ public class Appointment {
             this.patientId.value(), 
             this.professionalId.value(),
             this.scheduledTime.value(),
-            LocalDateTime.now()
+            cancelTime
         ));
 
         return cancelledAppointment;
@@ -348,6 +377,18 @@ public class Appointment {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public boolean isCancelled() {
+        return AppointmentStatus.CANCELLED.equals(this.status);
     }
 
     @Override

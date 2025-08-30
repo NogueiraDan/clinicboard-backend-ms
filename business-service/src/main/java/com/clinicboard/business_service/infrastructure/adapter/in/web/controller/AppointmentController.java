@@ -3,7 +3,7 @@ package com.clinicboard.business_service.infrastructure.adapter.in.web.controlle
 import com.clinicboard.business_service.application.port.in.ScheduleAppointmentCommand;
 import com.clinicboard.business_service.application.port.in.CancelAppointmentCommand;
 import com.clinicboard.business_service.application.port.in.FindAppointmentQuery;
-import com.clinicboard.business_service.infrastructure.adapter.in.web.dto.ScheduleAppointmentRequestDto;
+import com.clinicboard.business_service.infrastructure.adapter.in.web.dto.AppointmentRequestDto;
 import com.clinicboard.business_service.infrastructure.adapter.in.web.dto.AppointmentResponseDto;
 import com.clinicboard.business_service.infrastructure.adapter.in.web.mapper.AppointmentWebMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +49,7 @@ public class AppointmentController {
     @ApiResponse(responseCode = "409", description = "Conflito de horário")
     @PostMapping
     public ResponseEntity<AppointmentResponseDto> scheduleAppointment(
-            @Valid @RequestBody ScheduleAppointmentRequestDto request) {
+            @Valid @RequestBody AppointmentRequestDto request) {
         
         log.info("Recebida requisição para agendar consulta: patientId={}, scheduledTime={}", 
                 request.patientId(), request.scheduledTime());
